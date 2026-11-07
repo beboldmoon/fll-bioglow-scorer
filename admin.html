@@ -121,6 +121,13 @@ tbody tr{cursor:pointer}
   </div>
 
   <div class="card">
+    <h2>학교 관리 <span class="muted" id="school-count"></span></h2>
+    <div class="muted" style="margin-bottom:8px">학생은 여기에 등록된 학교만 선택할 수 있습니다. 학생이나 기록이 있는 학교는 삭제되지 않습니다.</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;max-width:420px"><input type="text" id="school-new" placeholder="학교 이름 (예: 대담초등학교)"><button type="button" id="school-add" class="primary">추가</button></div>
+    <div class="tblwrap"><table id="schools"><thead><tr><th>학교</th><th>등록 학생</th><th>기록</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="card">
     <h2>등록된 학생 · 비밀번호 초기화 <span class="muted" id="reg-count"></span></h2>
     <div class="muted" style="margin-bottom:8px">학생이 비밀번호를 잊었을 때 새 비밀번호를 정해 줍니다.</div>
     <div class="tblwrap"><table id="regs"><thead><tr><th>학교</th><th>학년반</th><th>이름</th><th>등록일</th><th>기록</th><th>새 비밀번호</th><th></th></tr></thead><tbody></tbody></table></div>
@@ -154,12 +161,12 @@ tbody tr{cursor:pointer}
       const sc=await rpc('fll_admin_scores',{p_code:code});
       if(!st.length&&!sc.length){ const probe=await rpc('fll_admin_reset_pin',{p_code:code,p_school:'__probe__',p_grade:'',p_name:'',p_new:'xxxx'}); if(probe==='BAD_CODE'){ $('gate-msg').textContent='코드가 맞지 않습니다. 한/영 전환과 띄어쓰기를 확인하세요'; return; } }
       CODE=code; try{sessionStorage.setItem('bioglow-admin',code)}catch(e){}
-      $('gate').hidden=true; $('app').hidden=false; studentsList=st; all=sc; buildFilters(); render(); $('k-last').textContent=all.length?fmt(all[all.length-1].created_at):'-';
+      $('gate').hidden=true; $('app').hidden=false; studentsList=st; all=sc; schoolsList=await rpc('fll_schools',{}); buildFilters(); render(); $('k-last').textContent=all.length?fmt(all[all.length-1].created_at):'-';
     }catch(e){ $('gate-msg').textContent='연결 실패: 인터넷을 확인하세요'; console.error(e); }
   }
   $('gate-btn').addEventListener('click',enter); $('gate-code').addEventListener('keydown',e=>{ if(e.key==='Enter') enter(); });
   try{ const c=sessionStorage.getItem('bioglow-admin'); if(c){ $('gate-code').value=c; enter(); } }catch(e){}
-  let studentsList=[];
+  let studentsList=[], schoolsList=[];
 
   // ---- scoring of a stored detail (same rules as the student page) ----
   const TOK=[0,10,15,25,35,50,50];
@@ -190,12 +197,12 @@ tbody tr{cursor:pointer}
   // ---- data ----
   async function load(){
     $('k-last').textContent='…';
-    try{ all=await rpc('fll_admin_scores',{p_code:CODE}); studentsList=await rpc('fll_admin_students',{p_code:CODE}); buildFilters(); render(); }
+    try{ all=await rpc('fll_admin_scores',{p_code:CODE}); studentsList=await rpc('fll_admin_students',{p_code:CODE}); schoolsList=await rpc('fll_schools',{}); buildFilters(); render(); }
     catch(e){ console.error(e); toast('불러오기 실패: 인터넷 연결 확인'); }
   }
   function uniq(a){ return [...new Set(a.filter(Boolean))].sort(); }
   function fill(sel,vals){ const cur=sel.value; sel.innerHTML='<option value="">전체</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join(''); sel.value=vals.includes(cur)?cur:''; }
-  function buildFilters(){ fill($('f-school'),uniq(all.map(r=>r.school))); fill($('f-grade'),uniq(all.map(r=>r.grade_class))); fill($('f-match'),uniq(all.map(r=>r.match_label))); }
+  function buildFilters(){ fill($('f-school'),uniq(schoolsList.map(r=>r.name).concat(all.map(r=>r.school)))); fill($('f-grade'),uniq(all.map(r=>r.grade_class))); fill($('f-match'),uniq(all.map(r=>r.match_label))); }
   function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
   function filtered(){
     const sc=$('f-school').value, gr=$('f-grade').value, mt=$('f-match').value, nm=$('f-name').value.trim(), f=$('f-from').value, t=$('f-to').value;
@@ -233,6 +240,13 @@ tbody tr{cursor:pointer}
       box.insertAdjacentHTML('beforeend',`<div class="mission"><span class="name">${name}</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="pct">${pct}%</span><span class="avg">${avg}${max?'/'+max:''}</span></div>`);
     });
     if(selected&&!g.has(selected)){ selected=null; $('student-panel').hidden=true; }
+    // schools
+    const sb=$('schools').querySelector('tbody'); sb.innerHTML=''; $('school-count').textContent=`${schoolsList.length}개`;
+    schoolsList.forEach(x=>{ const ns=studentsList.filter(y=>y.school===x.name).length, nr=all.filter(r=>r.school===x.name).length;
+      const tr=document.createElement('tr'); tr.style.cursor='default';
+      tr.innerHTML=`<td><b>${esc(x.name)}</b></td><td class="n">${ns}</td><td class="n">${nr}</td><td>${ns||nr?'':'<button type="button" style="padding:4px 10px;font-size:12px;color:var(--red)">삭제</button>'}</td>`;
+      const db=tr.querySelector('button'); if(db) db.addEventListener('click',async()=>{ db.disabled=true; try{ const res=await rpc('fll_admin_delete_school',{p_code:CODE,p_name:x.name}); toast(res==='OK'?`${x.name} 삭제`:'실패: '+res); if(res==='OK') load(); }catch(e){ toast('연결 실패'); } db.disabled=false; });
+      sb.appendChild(tr); });
     // registered students
     const rb=$('regs').querySelector('tbody'); rb.innerHTML=''; $('reg-count').textContent=`${studentsList.length}명`;
     const sc=$('f-school').value, gr=$('f-grade').value;
@@ -263,6 +277,9 @@ tbody tr{cursor:pointer}
   ['f-school','f-grade','f-match','f-from','f-to'].forEach(id=>$(id).addEventListener('change',render));
   $('f-name').addEventListener('input',render);
   $('reload').addEventListener('click',()=>{ load(); toast('새로고침'); });
+  async function addSchool(){ const inp=$('school-new'), name=inp.value.trim(); if(!name){ toast('학교 이름을 입력하세요'); return; }
+    try{ const res=await rpc('fll_admin_add_school',{p_code:CODE,p_name:name}); toast(res==='OK'?`${name} 추가 완료`:res==='EXISTS'?'이미 있는 학교입니다':'실패: '+res); if(res==='OK'){ inp.value=''; load(); } }catch(e){ toast('연결 실패'); } }
+  $('school-add').addEventListener('click',addSchool); $('school-new').addEventListener('keydown',e=>{ if(e.key==='Enter') addSchool(); });
   document.querySelectorAll('#students th').forEach(th=>th.addEventListener('click',()=>{ const k=th.dataset.k; if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=k==='name'||k==='school'||k==='grade'?1:-1; } render(); }));
   $('csv').addEventListener('click',()=>{
     const rows=filtered(); const head=['저장시각','학교','학년반','이름','팀명','경기','경기일','총점','GP',...MISSIONS.map(m=>m[1])];

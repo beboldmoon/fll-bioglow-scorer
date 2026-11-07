@@ -41,6 +41,7 @@ header p{margin:0;color:var(--muted);font-size:14px}
 .member button{font:inherit;font-size:18px;font-weight:700;width:38px;border:1px solid var(--line);border-radius:6px;background:var(--accent-soft);color:var(--accent);cursor:pointer;flex:none}
 .member button.rm{background:var(--red-soft);color:var(--red)}
 .meta label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:500}
+.meta select{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg)}
 .meta input{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg)}
 .rule{background:var(--red-soft);border-left:4px solid var(--red);padding:10px 12px;border-radius:0 6px 6px 0;font-size:13px}
 .rule b{color:var(--red)}
@@ -121,7 +122,7 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
 
   <div class="meta">
     <div class="meta-row">
-      <label>학교 <input id="m-school" type="text" placeholder="예: 대담초등학교"></label>
+      <label>학교 <select id="m-school"><option value="">학교 선택</option></select></label>
     </div>
     <div class="members" id="members">
       <div class="member"><input type="text" class="m-grade" placeholder="학년·반 (예: 5-2)"><input type="text" class="m-name" placeholder="이름"><input type="password" class="m-pin" placeholder="비밀번호" autocomplete="off"><button type="button" id="add-name" title="추가">+</button></div>
@@ -434,7 +435,7 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
     for(const k in LIMITS) if(k in o.ctr){ ctr[k]=o.ctr[k]; $(k).textContent=ctr[k]; }
     for(const id in o.chk) if($(id)) $(id).checked=o.chk[id];
     for(const n in o.radio){ const r=document.querySelector(`input[name=${n}][value="${o.radio[n]}"]`); if(r) r.checked=true; }
-    for(const id in o.text) $(id).value=o.text[id];
+    for(const id in o.text){ $(id).value=o.text[id]; if(id==='m-school') $(id).dataset.want=o.text[id]||''; }
     $('m15dock').value=o.dock||'';
     if(o.tries){ for(const mid in o.tries){ const box=document.querySelector(`[data-tries="${mid}"]`); if(!box) continue; box.querySelectorAll('.try').forEach(r=>r.remove()); o.tries[mid].forEach(([v,m])=>addTry(mid,v,m)); } }
     if(o.members&&o.members.length){ document.querySelectorAll('.member').forEach((r,i)=>{ if(i>0) r.remove(); }); o.members.forEach(([g,n],i)=>{ const r=i>0?addName():document.querySelector('.member'); r.querySelector('.m-grade').value=g||''; r.querySelector('.m-name').value=n||''; }); }
@@ -535,8 +536,13 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
   }
   $('cloud-refresh').addEventListener('click',loadMine);
 
+  async function loadSchools(){
+    try{ const rows=await rpc('fll_schools',{}); const sel=$('m-school'); const cur=sel.dataset.want||sel.value;
+      sel.innerHTML='<option value="">학교 선택</option>'+rows.map(r=>`<option>${r.name}</option>`).join(''); sel.value=cur; }
+    catch(e){ console.error(e); }
+  }
   try{ restore(JSON.parse(localStorage.getItem('bioglow-draft'))); }catch(e){}
-  render();
+  render(); loadSchools();
 })();
 </script>
 

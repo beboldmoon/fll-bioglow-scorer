@@ -22,6 +22,7 @@ h1{margin:0;font-size:24px;font-weight:900}
 h2{margin:0;font-size:16px;font-weight:700}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
 label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:500}
+select{font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);width:100%}
 input{font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);width:100%}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 button{font:inherit;font-weight:700;font-size:14px;padding:10px 16px;border-radius:999px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
@@ -51,7 +52,7 @@ a{color:var(--accent);font-weight:700}
   </div>
 
   <form class="card" id="reg">
-    <label>학교 <input id="r-school" placeholder="예: 대담초등학교" required></label>
+    <label>학교 <select id="r-school" required><option value="">학교 선택</option></select></label>
     <div class="two">
       <label>학년·반 <input id="r-grade" placeholder="예: 5-2" required></label>
       <label>이름 <input id="r-name" placeholder="이름" required></label>
@@ -66,7 +67,7 @@ a{color:var(--accent);font-weight:700}
   </form>
 
   <form class="card" id="chg" hidden>
-    <label>학교 <input id="c-school" required></label>
+    <label>학교 <select id="c-school" required><option value="">학교 선택</option></select></label>
     <div class="two">
       <label>학년·반 <input id="c-grade" required></label>
       <label>이름 <input id="c-name" required></label>
@@ -91,9 +92,11 @@ a{color:var(--accent);font-weight:700}
   const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
   const $=id=>document.getElementById(id);
   async function rpc(fn,args){ const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:H,body:JSON.stringify(args)}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
-  const MSG={OK:'완료!',EXISTS:'이미 만들어진 이름입니다. 비밀번호를 잊었으면 선생님께 말씀하세요.',PIN_LEN:'비밀번호는 4자 이상 20자 이하로 적어주세요.',EMPTY:'학교, 학년반, 이름을 모두 적어주세요.',BAD_PIN:'지금 비밀번호가 틀렸거나 등록되지 않은 이름입니다.'};
+  const MSG={OK:'완료!',EXISTS:'이미 만들어진 이름입니다. 비밀번호를 잊었으면 선생님께 말씀하세요.',PIN_LEN:'비밀번호는 4자 이상 20자 이하로 적어주세요.',EMPTY:'학교, 학년반, 이름을 모두 적어주세요.',NO_SCHOOL:'등록되지 않은 학교입니다. 선생님께 학교 등록을 요청하세요.',BAD_PIN:'지금 비밀번호가 틀렸거나 등록되지 않은 이름입니다.'};
   function show(el,res,okText){ el.className='msg '+(res==='OK'?'ok':'err'); el.textContent=res==='OK'?okText:(MSG[res]||res); }
 
+  (async()=>{ try{ const rows=await rpc('fll_schools',{}); const opts='<option value="">학교 선택</option>'+rows.map(r=>`<option>${r.name}</option>`).join(''); $('r-school').innerHTML=opts; $('c-school').innerHTML=opts;
+    if(!rows.length){ $('r-msg').className='msg err'; $('r-msg').textContent='아직 등록된 학교가 없습니다. 선생님께 말씀하세요.'; } }catch(e){ console.error(e); } })();
   document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
     document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
     $('reg').hidden=b.dataset.tab!=='reg'; $('chg').hidden=b.dataset.tab!=='chg';
