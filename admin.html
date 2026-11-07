@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIOGLOW 관리자 대시보드</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+*{box-sizing:border-box}html,body{margin:0}
+:root{
+  --bg:#f3f6f1; --card:#ffffff; --fg:#17231b; --muted:#5d6b61; --line:#d4ddd3;
+  --accent:#1f7a4d; --accent-soft:#e3f1e8; --red:#c8102e; --red-soft:#fbe8eb; --bar:#4fc784;
+  --font:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121914; --card:#1b241e; --fg:#eef3ee; --muted:#9fb0a4; --line:#2f3d33;
+  --accent:#4fc784; --accent-soft:#1f3328; --red:#ff6b7f; --red-soft:#3a2126; --bar:#4fc784; color-scheme:dark } }
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;padding:16px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;justify-content:space-between}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{margin:0;font-size:24px;font-weight:900}
+h2{margin:0 0 8px;font-size:15px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;align-items:end}
+.filters label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:500}
+input,select,button{font:inherit}
+input,select{font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);min-width:0;width:100%}
+button{font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer;white-space:nowrap}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
+.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.tblwrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:700;cursor:pointer;user-select:none}
+th.sorted::after{content:" ▾";color:var(--accent)}
+td.n{text-align:right}
+tr.sel td{background:var(--accent-soft)}
+tbody tr{cursor:pointer}
+.best{font-weight:900;color:var(--accent)}
+.mission{display:grid;grid-template-columns:72px 1fr 52px 52px;gap:8px;align-items:center;padding:4px 0;font-size:13px}
+.mission .name{font-weight:700}
+.mission .track{height:12px;background:var(--line);border-radius:999px;overflow:hidden}
+.mission .fill{height:100%;background:var(--bar);border-radius:999px}
+.mission .pct,.mission .avg{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.mhead{display:grid;grid-template-columns:72px 1fr 52px 52px;gap:8px;font-size:11px;color:var(--muted);padding-bottom:4px}
+.mhead span:nth-child(n+3){text-align:right}
+.hist{display:flex;flex-direction:column;gap:6px}
+.hrow{display:grid;grid-template-columns:110px 1fr 60px 60px;gap:8px;align-items:center;font-size:13px;border-bottom:1px dashed var(--line);padding:5px 0}
+.hrow .t{font-weight:900;color:var(--accent);text-align:right}
+.hrow .gp{color:var(--muted);text-align:right}
+.detail{font-size:12.5px;color:var(--muted);grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 10px}
+.detail b{color:var(--fg)}
+.muted{color:var(--muted);font-size:13px}
+.spark{display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:6px}
+.spark div{flex:1;background:var(--bar);border-radius:3px 3px 0 0;min-width:4px;position:relative}
+.spark div span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted)}
+#gate{max-width:360px;margin:60px auto;display:flex;flex-direction:column;gap:10px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;z-index:30}
+</style>
+</head>
+<body>
+
+<div id="gate" class="card">
+  <div class="eyebrow">관리자 전용</div>
+  <h1 style="font-size:20px">BIOGLOW 대시보드</h1>
+  <label class="muted">관리자 코드 <input type="password" id="gate-code" autocomplete="off"></label>
+  <button class="primary" id="gate-btn">들어가기</button>
+  <div class="muted" id="gate-msg"></div>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header>
+    <div>
+      <div class="eyebrow">FIRST LEGO League Challenge · 2026-27 BIOGLOW</div>
+      <h1>관리자 대시보드</h1>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="reload">새로고침</button>
+      <button id="csv">CSV 다운로드</button>
+    </div>
+  </header>
+
+  <div class="card filters">
+    <label>학교 <select id="f-school"><option value="">전체</option></select></label>
+    <label>학년반 <select id="f-grade"><option value="">전체</option></select></label>
+    <label>경기 <select id="f-match"><option value="">전체</option></select></label>
+    <label>시작일 <input type="date" id="f-from"></label>
+    <label>종료일 <input type="date" id="f-to"></label>
+    <label>이름 검색 <input type="search" id="f-name" placeholder="이름"></label>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="l">학생 수</div><div class="v" id="k-students">0</div></div>
+    <div class="kpi"><div class="l">저장 기록 수</div><div class="v" id="k-records">0</div></div>
+    <div class="kpi"><div class="l">최고점 평균</div><div class="v" id="k-avgbest">0</div></div>
+    <div class="kpi"><div class="l">전체 최고점</div><div class="v" id="k-max">0</div></div>
+    <div class="kpi"><div class="l">최근 저장</div><div class="v" id="k-last" style="font-size:16px">-</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>학생별 현황 <span class="muted" id="t-count"></span></h2>
+      <div class="tblwrap"><table id="students">
+        <thead><tr>
+          <th data-k="school">학교</th><th data-k="grade">학년반</th><th data-k="name">이름</th>
+          <th data-k="count" class="n">기록</th><th data-k="best" class="n">최고</th><th data-k="latest" class="n">최근</th><th data-k="gp" class="n">GP</th><th data-k="last">최근 저장</th>
+        </tr></thead><tbody></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h2>임무별 달성률 <span class="muted">(학생별 최근 기록 기준)</span></h2>
+      <div class="mhead"><span>임무</span><span></span><span>달성</span><span>평균</span></div>
+      <div id="missions"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>등록된 학생 · 비밀번호 초기화 <span class="muted" id="reg-count"></span></h2>
+    <div class="muted" style="margin-bottom:8px">학생이 비밀번호를 잊었을 때 새 비밀번호를 정해 줍니다.</div>
+    <div class="tblwrap"><table id="regs"><thead><tr><th>학교</th><th>학년반</th><th>이름</th><th>등록일</th><th>기록</th><th>새 비밀번호</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="card" id="student-panel" hidden>
+    <h2 id="sp-title"></h2>
+    <div class="spark" id="sp-spark"></div>
+    <div class="hist" id="sp-hist" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SB_URL='https://odlyfhfwwfoueomwjkoh.supabase.co';
+  const SB_KEY='sb_publishable_B4GK5kSY45WkrdchYpMM1Q_Z7ixRsQA';
+  let CODE='';
+  const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+  async function rpc(fn,args){ const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:H,body:JSON.stringify(args)}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+  const $=id=>document.getElementById(id);
+  const MISSIONS=[['eq','장비 검사',20],['tok','정밀 토큰',50],['m01','01 드론 조사',30],['m02','02 씨앗 퍼트리기',null],['m03','03 바위 뒤집기',30],['m04','04 행운의 잎사귀',30],['m05','05 뻗어나가는 뿌리',20],['m06','06 잎꾼개미',null],['m07','07 거대한 곰팡이',40],['m08','08 덩굴',30],['m09','09 연구 플랫폼',30],['m10','10 미세서식지',20],['m11','11 과거로의 문',20],['m12','12 숲의 장로',30],['m13','13 핵심종',30],['m14','14 생명의 씨앗',null],['m15','15 생물 중심 건축',40]];
+  let all=[], sortKey='last', sortDir=-1, selected=null;
+
+  function toast(m){ const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+
+  // ---- gate ----
+  async function enter(){
+    const code=$('gate-code').value; $('gate-msg').textContent='확인 중…';
+    try{ const st=await rpc('fll_admin_students',{p_code:code});
+      // 코드가 틀리면 빈 배열, 맞으면 학생 목록(0명일 수도 있음) → 점수 조회로 한 번 더 확인
+      const sc=await rpc('fll_admin_scores',{p_code:code});
+      if(!st.length&&!sc.length){ const probe=await rpc('fll_admin_reset_pin',{p_code:code,p_school:'__probe__',p_grade:'',p_name:'',p_new:'xxxx'}); if(probe==='BAD_CODE'){ $('gate-msg').textContent='코드가 맞지 않습니다'; return; } }
+      CODE=code; try{sessionStorage.setItem('bioglow-admin',code)}catch(e){}
+      $('gate').hidden=true; $('app').hidden=false; studentsList=st; all=sc; buildFilters(); render(); $('k-last').textContent=all.length?fmt(all[all.length-1].created_at):'-';
+    }catch(e){ $('gate-msg').textContent='연결 실패: 인터넷을 확인하세요'; console.error(e); }
+  }
+  $('gate-btn').addEventListener('click',enter); $('gate-code').addEventListener('keydown',e=>{ if(e.key==='Enter') enter(); });
+  try{ const c=sessionStorage.getItem('bioglow-admin'); if(c){ $('gate-code').value=c; enter(); } }catch(e){}
+  let studentsList=[];
+
+  // ---- scoring of a stored detail (same rules as the student page) ----
+  const TOK=[0,10,15,25,35,50,50];
+  function missionScore(d,id){
+    const chk=d.chk||{}, ctr=d.ctr||{}, radio=d.radio||{}, on=k=>!!chk[k];
+    switch(id){
+      case 'eq': return on('eq1')?20:0;
+      case 'tok': return TOK[ctr.tok??6]||0;
+      case 'm01': return (on('m01a')?20:0)+(on('m01a')&&on('m01b')?10:0);
+      case 'm02': return (ctr.m02n||0)*10;
+      case 'm03': return (on('m03a')?20:0)+(on('m03a')&&on('m03b')?10:0);
+      case 'm04': if(on('m04x')) return 0; return (on('m04a')?10:0)+(on('m04a')&&on('m04b')?20:0);
+      case 'm05': return +(radio.m05||0);
+      case 'm06': return on('m06a')?(ctr.m06n||0)*10:0;
+      case 'm07': return on('m07a')?20+(ctr.m07n||0)*10:0;
+      case 'm08': return on('m08a')?30:0;
+      case 'm09': return (on('m09a')?10:0)+(on('m09b')?10:0)+(on('m09c')?10:0);
+      case 'm10': return (on('m10a')?10:0)+(on('m10b')?10:0);
+      case 'm11': return on('m11a')?20:0;
+      case 'm12': return (on('m12a')?20:0)+(on('m12b')?10:0);
+      case 'm13': return on('m13a')?30:0;
+      case 'm14': return (ctr.m14n||0)*5+(ctr.m14b||0)*5;
+      case 'm15': { let s=(on('m15a')?10:0)+(on('m15b')?10:0)+(on('m15c')?10:0); if(d.dock&&on(d.dock)) s+=10; return s; }
+    }
+    return 0;
+  }
+
+  // ---- data ----
+  async function load(){
+    $('k-last').textContent='…';
+    try{ all=await rpc('fll_admin_scores',{p_code:CODE}); studentsList=await rpc('fll_admin_students',{p_code:CODE}); buildFilters(); render(); }
+    catch(e){ console.error(e); toast('불러오기 실패: 인터넷 연결 확인'); }
+  }
+  function uniq(a){ return [...new Set(a.filter(Boolean))].sort(); }
+  function fill(sel,vals){ const cur=sel.value; sel.innerHTML='<option value="">전체</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join(''); sel.value=vals.includes(cur)?cur:''; }
+  function buildFilters(){ fill($('f-school'),uniq(all.map(r=>r.school))); fill($('f-grade'),uniq(all.map(r=>r.grade_class))); fill($('f-match'),uniq(all.map(r=>r.match_label))); }
+  function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function filtered(){
+    const sc=$('f-school').value, gr=$('f-grade').value, mt=$('f-match').value, nm=$('f-name').value.trim(), f=$('f-from').value, t=$('f-to').value;
+    return all.filter(r=>(!sc||r.school===sc)&&(!gr||r.grade_class===gr)&&(!mt||r.match_label===mt)&&(!nm||r.student_name.includes(nm))
+      &&(!f||r.created_at.slice(0,10)>=f)&&(!t||r.created_at.slice(0,10)<=t));
+  }
+  function fmt(iso){ const d=new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+
+  function render(){
+    const rows=filtered();
+    // group by student
+    const g=new Map();
+    rows.forEach(r=>{ const k=`${r.school}|${r.grade_class}|${r.student_name}`; if(!g.has(k)) g.set(k,{school:r.school,grade:r.grade_class,name:r.student_name,recs:[]}); g.get(k).recs.push(r); });
+    const students=[...g.values()].map(s=>{ const last=s.recs[s.recs.length-1]; return {...s,count:s.recs.length,best:Math.max(...s.recs.map(r=>r.total)),latest:last.total,gp:last.gp||'',last:last.created_at,lastRec:last}; });
+    students.sort((a,b)=>{ const x=a[sortKey],y=b[sortKey]; return (x>y?1:x<y?-1:0)*sortDir; });
+
+    $('k-students').textContent=students.length; $('k-records').textContent=rows.length;
+    $('k-avgbest').textContent=students.length?Math.round(students.reduce((a,s)=>a+s.best,0)/students.length):0;
+    $('k-max').textContent=students.length?Math.max(...students.map(s=>s.best)):0;
+    $('k-last').textContent=rows.length?fmt(rows[rows.length-1].created_at):'-';
+    $('t-count').textContent=`${students.length}명`;
+
+    const tb=$('students').querySelector('tbody'); tb.innerHTML='';
+    students.forEach(s=>{ const tr=document.createElement('tr'); const k=`${s.school}|${s.grade}|${s.name}`; if(selected===k) tr.className='sel';
+      tr.innerHTML=`<td>${esc(s.school)}</td><td>${esc(s.grade)}</td><td><b>${esc(s.name)}</b></td><td class="n">${s.count}</td><td class="n best">${s.best}</td><td class="n">${s.latest}</td><td class="n">${s.gp}</td><td>${fmt(s.last)}</td>`;
+      tr.addEventListener('click',()=>{ selected=k; render(); showStudent(s); }); tb.appendChild(tr); });
+    document.querySelectorAll('#students th').forEach(th=>th.classList.toggle('sorted',th.dataset.k===sortKey));
+
+    // missions (latest record per student)
+    const box=$('missions'); box.innerHTML='';
+    MISSIONS.forEach(([id,name,max])=>{
+      const vals=students.map(s=>missionScore(s.lastRec.detail||{},id));
+      const n=vals.length, done=vals.filter(v=>v>0).length, avg=n?Math.round(vals.reduce((a,b)=>a+b,0)/n):0;
+      const pct=n?Math.round(done/n*100):0;
+      box.insertAdjacentHTML('beforeend',`<div class="mission"><span class="name">${name}</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="pct">${pct}%</span><span class="avg">${avg}${max?'/'+max:''}</span></div>`);
+    });
+    if(selected&&!g.has(selected)){ selected=null; $('student-panel').hidden=true; }
+    // registered students
+    const rb=$('regs').querySelector('tbody'); rb.innerHTML=''; $('reg-count').textContent=`${studentsList.length}명`;
+    const sc=$('f-school').value, gr=$('f-grade').value;
+    studentsList.filter(x=>(!sc||x.school===sc)&&(!gr||x.grade_class===gr)).forEach(x=>{
+      const k=`${x.school}|${x.grade_class}|${x.student_name}`; const cnt=g.has(k)?g.get(k).recs.length:0;
+      const tr=document.createElement('tr'); tr.style.cursor='default';
+      tr.innerHTML=`<td>${esc(x.school)}</td><td>${esc(x.grade_class)}</td><td><b>${esc(x.student_name)}</b></td><td>${fmt(x.created_at)}</td><td class="n">${cnt}</td><td><input type="password" placeholder="4자 이상" style="width:110px;padding:4px 6px" autocomplete="off"></td><td><button type="button" style="padding:4px 10px;font-size:12px">초기화</button></td>`;
+      tr.querySelector('button').addEventListener('click',async ev=>{ const inp=tr.querySelector('input'); if(inp.value.length<4){ toast('새 비밀번호는 4자 이상'); return; } ev.target.disabled=true;
+        try{ const res=await rpc('fll_admin_reset_pin',{p_code:CODE,p_school:x.school,p_grade:x.grade_class,p_name:x.student_name,p_new:inp.value}); toast(res==='OK'?`${x.student_name} 비밀번호 변경 완료`:'실패: '+res); if(res==='OK') inp.value=''; }
+        catch(e){ toast('연결 실패'); } ev.target.disabled=false; });
+      rb.appendChild(tr);
+    });
+  }
+  function showStudent(s){
+    const p=$('student-panel'); p.hidden=false;
+    $('sp-title').textContent=`${s.school} ${s.grade} ${s.name} · ${s.count}건 · 최고 ${s.best}점`;
+    const sp=$('sp-spark'); sp.innerHTML=''; const mx=Math.max(1,...s.recs.map(r=>r.total));
+    s.recs.forEach(r=>{ sp.insertAdjacentHTML('beforeend',`<div style="height:${Math.max(4,r.total/mx*100)}%" title="${fmt(r.created_at)} ${r.total}점"><span>${r.total}</span></div>`); });
+    const h=$('sp-hist'); h.innerHTML='';
+    [...s.recs].reverse().forEach(r=>{
+      const d=r.detail||{}; const parts=MISSIONS.map(([id,name])=>{ const v=missionScore(d,id); return v?`<span><b>${name.replace(/^\d+ /,'')}</b> ${v}</span>`:''; }).filter(Boolean).join('');
+      const tries=d.tries?Object.entries(d.tries).filter(([,a])=>a&&a.length).map(([m,a])=>`<span><b>${m.toUpperCase()} 시도</b> ${a.map(([t,memo])=>t?t+'초'+(memo?'('+esc(memo)+')':''):'').filter(Boolean).join(', ')}</span>`).join(''):'';
+      h.insertAdjacentHTML('beforeend',`<div class="hrow"><span>${fmt(r.created_at)}</span><span>${esc(r.match_label||'')} ${r.team_name?'· '+esc(r.team_name):''}</span><span class="t">${r.total}</span><span class="gp">GP ${r.gp||'-'}</span><div class="detail">${parts||'<span>체크 항목 없음</span>'}${tries}</div></div>`);
+    });
+    p.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  ['f-school','f-grade','f-match','f-from','f-to'].forEach(id=>$(id).addEventListener('change',render));
+  $('f-name').addEventListener('input',render);
+  $('reload').addEventListener('click',()=>{ load(); toast('새로고침'); });
+  document.querySelectorAll('#students th').forEach(th=>th.addEventListener('click',()=>{ const k=th.dataset.k; if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=k==='name'||k==='school'||k==='grade'?1:-1; } render(); }));
+  $('csv').addEventListener('click',()=>{
+    const rows=filtered(); const head=['저장시각','학교','학년반','이름','팀명','경기','경기일','총점','GP',...MISSIONS.map(m=>m[1])];
+    const lines=[head.join(',')].concat(rows.map(r=>[new Date(r.created_at).toLocaleString('ko-KR'),r.school,r.grade_class,r.student_name,r.team_name||'',r.match_label||'',r.match_date||'',r.total,r.gp||'',...MISSIONS.map(([id])=>missionScore(r.detail||{},id))].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')));
+    const blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bioglow_scores_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  });
+})();
+</script>
+</body>
+</html>

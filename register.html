@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIOGLOW 비밀번호 만들기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+*{box-sizing:border-box}html,body{margin:0}
+:root{
+  --bg:#f3f6f1; --card:#ffffff; --fg:#17231b; --muted:#5d6b61; --line:#d4ddd3;
+  --accent:#1f7a4d; --accent-soft:#e3f1e8; --red:#c8102e; --red-soft:#fbe8eb;
+  --font:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121914; --card:#1b241e; --fg:#eef3ee; --muted:#9fb0a4; --line:#2f3d33;
+  --accent:#4fc784; --accent-soft:#1f3328; --red:#ff6b7f; --red-soft:#3a2126; color-scheme:dark } }
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.5;padding:16px}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{margin:0;font-size:24px;font-weight:900}
+h2{margin:0;font-size:16px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:500}
+input{font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{font:inherit;font-weight:700;font-size:14px;padding:10px 16px;border-radius:999px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+button:disabled{opacity:.5}
+button.ghost{background:var(--accent-soft);color:var(--accent);border-color:var(--line)}
+.msg{font-size:13.5px;min-height:1.4em}
+.msg.ok{color:var(--accent);font-weight:700}
+.msg.err{color:var(--red);font-weight:700}
+.hint{font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:6px}
+.tabs button{flex:1;background:var(--card);color:var(--muted);border-color:var(--line)}
+.tabs button.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+a{color:var(--accent);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div class="eyebrow">FIRST LEGO League Challenge · 2026-27 BIOGLOW</div>
+    <h1>내 비밀번호 만들기</h1>
+    <div class="hint">점수를 저장하고 다시 불러오려면 학교·학년반·이름에 비밀번호가 하나 필요합니다. 한 번만 만들면 됩니다.</div>
+  </div>
+
+  <div class="tabs">
+    <button type="button" class="on" data-tab="reg">새로 만들기</button>
+    <button type="button" data-tab="chg">비밀번호 바꾸기</button>
+  </div>
+
+  <form class="card" id="reg">
+    <label>학교 <input id="r-school" placeholder="예: 대담초등학교" required></label>
+    <div class="two">
+      <label>학년·반 <input id="r-grade" placeholder="예: 5-2" required></label>
+      <label>이름 <input id="r-name" placeholder="이름" required></label>
+    </div>
+    <div class="two">
+      <label>비밀번호 (4자 이상) <input id="r-pin" type="password" minlength="4" maxlength="20" autocomplete="new-password" required></label>
+      <label>비밀번호 확인 <input id="r-pin2" type="password" autocomplete="new-password" required></label>
+    </div>
+    <div class="hint">학교·학년반·이름은 채점표에 적는 것과 글자까지 똑같아야 합니다. (예: "5-2"로 만들었으면 채점표에도 "5-2")</div>
+    <button type="submit" id="r-btn">비밀번호 만들기</button>
+    <div class="msg" id="r-msg"></div>
+  </form>
+
+  <form class="card" id="chg" hidden>
+    <label>학교 <input id="c-school" required></label>
+    <div class="two">
+      <label>학년·반 <input id="c-grade" required></label>
+      <label>이름 <input id="c-name" required></label>
+    </div>
+    <label>지금 비밀번호 <input id="c-old" type="password" autocomplete="current-password" required></label>
+    <div class="two">
+      <label>새 비밀번호 (4자 이상) <input id="c-new" type="password" minlength="4" maxlength="20" autocomplete="new-password" required></label>
+      <label>새 비밀번호 확인 <input id="c-new2" type="password" autocomplete="new-password" required></label>
+    </div>
+    <button type="submit" id="c-btn">비밀번호 바꾸기</button>
+    <div class="msg" id="c-msg"></div>
+    <div class="hint">비밀번호를 잊었으면 선생님께 말씀드리세요. 선생님이 새 비밀번호로 바꿔 줄 수 있습니다.</div>
+  </form>
+
+  <div class="hint">만들었으면 <a href="index.html">채점표로 돌아가기</a></div>
+</div>
+
+<script>
+(function(){
+  const SB_URL='https://odlyfhfwwfoueomwjkoh.supabase.co';
+  const SB_KEY='sb_publishable_B4GK5kSY45WkrdchYpMM1Q_Z7ixRsQA';
+  const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+  const $=id=>document.getElementById(id);
+  async function rpc(fn,args){ const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:H,body:JSON.stringify(args)}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+  const MSG={OK:'완료!',EXISTS:'이미 만들어진 이름입니다. 비밀번호를 잊었으면 선생님께 말씀하세요.',PIN_LEN:'비밀번호는 4자 이상 20자 이하로 적어주세요.',EMPTY:'학교, 학년반, 이름을 모두 적어주세요.',BAD_PIN:'지금 비밀번호가 틀렸거나 등록되지 않은 이름입니다.'};
+  function show(el,res,okText){ el.className='msg '+(res==='OK'?'ok':'err'); el.textContent=res==='OK'?okText:(MSG[res]||res); }
+
+  document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+    $('reg').hidden=b.dataset.tab!=='reg'; $('chg').hidden=b.dataset.tab!=='chg';
+  }));
+
+  $('reg').addEventListener('submit',async e=>{
+    e.preventDefault(); const m=$('r-msg');
+    if($('r-pin').value!==$('r-pin2').value){ show(m,'ERR'); m.textContent='비밀번호 확인이 다릅니다.'; return; }
+    $('r-btn').disabled=true;
+    try{ const res=await rpc('fll_register',{p_school:$('r-school').value.trim(),p_grade:$('r-grade').value.trim(),p_name:$('r-name').value.trim(),p_pin:$('r-pin').value});
+      show(m,res,`${$('r-name').value.trim()} 비밀번호를 만들었습니다. 이제 채점표에서 저장할 수 있어요.`);
+      if(res==='OK'){ try{ localStorage.setItem('bioglow-reg',JSON.stringify({school:$('r-school').value.trim(),grade:$('r-grade').value.trim(),name:$('r-name').value.trim()})); }catch(_){ } }
+    }catch(err){ show(m,'ERR'); m.textContent='연결 실패: 인터넷을 확인하세요.'; console.error(err); }
+    $('r-btn').disabled=false;
+  });
+
+  $('chg').addEventListener('submit',async e=>{
+    e.preventDefault(); const m=$('c-msg');
+    if($('c-new').value!==$('c-new2').value){ show(m,'ERR'); m.textContent='새 비밀번호 확인이 다릅니다.'; return; }
+    $('c-btn').disabled=true;
+    try{ const res=await rpc('fll_change_pin',{p_school:$('c-school').value.trim(),p_grade:$('c-grade').value.trim(),p_name:$('c-name').value.trim(),p_old:$('c-old').value,p_new:$('c-new').value});
+      show(m,res,'비밀번호를 바꿨습니다.'); }
+    catch(err){ show(m,'ERR'); m.textContent='연결 실패: 인터넷을 확인하세요.'; console.error(err); }
+    $('c-btn').disabled=false;
+  });
+})();
+</script>
+</body>
+</html>

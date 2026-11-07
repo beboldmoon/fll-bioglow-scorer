@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIOGLOW 자가 채점표</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+*{box-sizing:border-box}html,body{margin:0}
+
+/* Layout: one column of mission cards, sticky running total pinned to the bottom like a referee's score column */
+:root{
+  --bg:#f3f6f1; --card:#ffffff; --fg:#17231b; --muted:#5d6b61; --line:#d4ddd3;
+  --accent:#1f7a4d; --accent-soft:#e3f1e8; --red:#c8102e; --red-soft:#fbe8eb;
+  --note:#2a5c9c; --total-bg:#17231b; --total-fg:#f3f6f1;
+  --font:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121914; --card:#1b241e; --fg:#eef3ee; --muted:#9fb0a4; --line:#2f3d33;
+  --accent:#4fc784; --accent-soft:#1f3328; --red:#ff6b7f; --red-soft:#3a2126;
+  --note:#8ab6ea; --total-bg:#4fc784; --total-fg:#0e1711; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121914; --card:#1b241e; --fg:#eef3ee; --muted:#9fb0a4; --line:#2f3d33;
+  --accent:#4fc784; --accent-soft:#1f3328; --red:#ff6b7f; --red-soft:#3a2126;
+  --note:#8ab6ea; --total-bg:#4fc784; --total-fg:#0e1711; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px 110px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-direction:column;gap:6px;padding-block:8px 4px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{margin:0;font-size:26px;font-weight:900;line-height:1.2;text-wrap:balance}
+header p{margin:0;color:var(--muted);font-size:14px}
+.meta{display:flex;flex-direction:column;gap:8px}
+.meta-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.members{display:flex;flex-direction:column;gap:6px}
+.member{display:grid;grid-template-columns:1fr 1.3fr 1fr auto;gap:6px}
+.member input{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);min-width:0}
+.member button{font:inherit;font-size:18px;font-weight:700;width:38px;border:1px solid var(--line);border-radius:6px;background:var(--accent-soft);color:var(--accent);cursor:pointer;flex:none}
+.member button.rm{background:var(--red-soft);color:var(--red)}
+.meta label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:500}
+.meta input{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg)}
+.rule{background:var(--red-soft);border-left:4px solid var(--red);padding:10px 12px;border-radius:0 6px 6px 0;font-size:13px}
+.rule b{color:var(--red)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card.off{opacity:.55}
+.head{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.num{background:var(--red);color:#fff;font-weight:900;font-size:12px;padding:2px 8px;border-radius:4px;letter-spacing:.04em;white-space:nowrap}
+.name{font-weight:700;font-size:16px;flex:1;min-width:0}
+.lock{font-size:11px;color:var(--red);border:1px solid var(--red);border-radius:999px;padding:1px 7px;white-space:nowrap}
+.score{font-variant-numeric:tabular-nums;font-weight:900;font-size:20px;min-width:44px;text-align:right;color:var(--accent)}
+.score.zero{color:var(--muted)}
+.body{padding:6px 12px 10px;display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);min-width:0}
+.row:last-child{border-bottom:0}
+.row .txt{flex:1;min-width:0;font-size:14px}
+.row .pts{font-weight:700;color:var(--red);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:14px}
+.row input[type=checkbox],.row input[type=radio]{width:22px;height:22px;accent-color:var(--accent);flex:none;margin:0}
+.row.bonus .txt::before{content:"보너스 ";font-weight:700;color:var(--accent)}
+.row.sub{padding-left:8px}
+.ctr{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:none}
+.ctr button{font:inherit;font-size:18px;font-weight:700;width:36px;height:34px;border:0;background:var(--accent-soft);color:var(--accent);cursor:pointer}
+.ctr button:disabled{opacity:.35;cursor:default}
+.ctr output{min-width:34px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.note{font-size:12.5px;color:var(--note);font-style:italic;padding:6px 0 2px;line-height:1.45}
+select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);max-width:100%}
+.tries{border-top:1px solid var(--line);padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px}
+.tries .tl{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+.tries .tl button{margin-left:auto;font:inherit;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer}
+.try{display:flex;align-items:center;gap:6px;min-width:0}
+.try .k{font-size:13px;color:var(--muted);width:44px;flex:none;font-variant-numeric:tabular-nums}
+.try input{font:inherit;font-size:14px;width:0;flex:1;min-width:0;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);font-variant-numeric:tabular-nums}
+.try input.ok{border-color:var(--accent)}
+.try button{font:inherit;font-size:13px;font-weight:700;height:32px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);cursor:pointer;flex:none}
+.try button.sw.run{background:var(--red);color:#fff;border-color:var(--red)}
+.try button.rm{color:var(--red)}
+.try .memo{flex:1.4}
+.cloud{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.cloud h2{margin:0;font-size:16px}
+.cloud .hint{font-size:12.5px;color:var(--muted)}
+.cloud table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.cloud th,.cloud td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.cloud th{font-size:12px;color:var(--muted);font-weight:700}
+.cloud td.t{font-weight:900;color:var(--accent)}
+.cloud .tblwrap{overflow-x:auto}
+.cloud button.ld{font:inherit;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer}
+.cloud .row-btn{display:flex;gap:8px;flex-wrap:wrap}
+.cloud .row-btn button{font:inherit;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;z-index:30;max-width:90vw;text-align:center}
+.totalbar button.save{background:var(--total-fg);color:var(--total-bg)}
+.gp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px}
+.gp label{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1px solid var(--line);border-radius:8px;cursor:pointer;text-align:center;font-size:13px}
+.gp label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.gp input{accent-color:var(--accent);width:20px;height:20px}
+.gp b{font-size:18px}
+
+.totalbar{position:fixed;left:0;right:0;bottom:0;background:var(--total-bg);color:var(--total-fg);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));z-index:20}
+.totalbar .in{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.totalbar .lbl{font-size:13px;opacity:.8}
+.totalbar .big{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;flex:1}
+.totalbar .max{font-size:12px;opacity:.7}
+.totalbar button{font:inherit;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.score{transition:color .2s}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">FIRST LEGO League Challenge · 2026-27 BIOGLOW</div>
+    <h1>로봇 게임 자가 채점표</h1>
+    <p>경기가 끝난 상태의 경기장을 보고 해당하는 항목을 체크하세요. 점수는 자동으로 합산됩니다.</p>
+  </header>
+
+  <div class="meta">
+    <div class="meta-row">
+      <label>학교 <input id="m-school" type="text" placeholder="예: 대담초등학교"></label>
+    </div>
+    <div class="members" id="members">
+      <div class="member"><input type="text" class="m-grade" placeholder="학년·반 (예: 5-2)"><input type="text" class="m-name" placeholder="이름"><input type="password" class="m-pin" placeholder="비밀번호" autocomplete="off"><button type="button" id="add-name" title="추가">+</button></div>
+    </div>
+    <div class="hint-reg" style="font-size:12.5px;color:var(--muted)">비밀번호가 없으면 <a href="register.html" style="color:var(--accent);font-weight:700">비밀번호 만들기</a>에서 먼저 등록하세요. 저장·불러오기에 필요합니다.</div>
+    <div class="meta-row">
+      <label>팀명 <input id="m-team" type="text" placeholder="예: 그린로봇"></label>
+      <label>경기 <input id="m-match" type="text" placeholder="예: 연습 3"></label>
+      <label>날짜 <input id="m-date" type="date"></label>
+    </div>
+  </div>
+
+  <div class="rule"><b>장비 제약 조건</b>: 🚫 표시가 있는 임무는 <b>경기 종료 시 장비에 닿아 있는 임무 모형은 점수를 획득할 수 없습니다.</b> 체크하기 전에 로봇이나 부속물이 모형에 닿아 있는지 먼저 확인하세요.</div>
+
+  <!-- 장비 검사 -->
+  <section class="card" data-id="eq">
+    <div class="head"><span class="num">검사</span><span class="name">장비 검사</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" data-pts="20" id="eq1"><span class="txt">로봇과 모든 장비가 한 쪽 출발구역에 완전히 들어가 있고, 검사 시 12인치(305mm) 높이 제한 아래에 있음</span><span class="pts">20</span></label>
+    </div>
+  </section>
+
+  <!-- 정밀 토큰 -->
+  <section class="card" data-id="tok">
+    <div class="head"><span class="num">토큰</span><span class="name">정밀 토큰</span><span class="score">0</span></div>
+    <div class="body">
+      <div class="row"><span class="txt">경기 종료 시 남은 정밀 토큰 개수</span>
+        <span class="ctr"><button type="button" data-dec="tok">−</button><output id="tok">6</output><button type="button" data-inc="tok">+</button></span></div>
+      <div class="note">0개: 0점 · 1개: 10 · 2개: 15 · 3개: 25 · 4개: 35 · 5개: 50 · 6개: 50</div>
+    </div>
+  </section>
+
+  <!-- M01 -->
+  <section class="card" data-id="m01">
+    <div class="head"><span class="num">임무 01</span><span class="name">드론 조사</span><span class="lock">🚫 장비</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m01a" data-pts="20"><span class="txt">드론이 더 이상 매트에 닿아 있지 않음</span><span class="pts">20</span></label>
+      <label class="row bonus"><input type="checkbox" id="m01b" data-pts="10" data-needs="m01a"><span class="txt">라이다 지도가 완전히 뒤집히고, 스캔 마커가 조사 구역 내에 (일부라도) 들어감</span><span class="pts">+10</span></label>
+    </div>
+    <div class="tries" data-tries="m01">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m01">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M02 -->
+  <section class="card" data-id="m02">
+    <div class="head"><span class="num">임무 02</span><span class="name">씨앗 퍼트리기</span><span class="score">0</span></div>
+    <div class="body">
+      <div class="row"><span class="txt">줄기에서 떨어진 씨앗 개수 (각 10점)</span>
+        <span class="ctr"><button type="button" data-dec="m02n">−</button><output id="m02n">0</output><button type="button" data-inc="m02n">+</button></span></div>
+    </div>
+    <div class="tries" data-tries="m02">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m02">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M03 -->
+  <section class="card" data-id="m03">
+    <div class="head"><span class="num">임무 03</span><span class="name">바위 뒤집기</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m03a" data-pts="20"><span class="txt">연구 깃발이 내려감</span><span class="pts">20</span></label>
+      <label class="row bonus"><input type="checkbox" id="m03b" data-pts="10" data-needs="m03a"><span class="txt">그리고 바위가 원래의 시작 위치로 되돌아감</span><span class="pts">+10</span></label>
+    </div>
+    <div class="tries" data-tries="m03">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m03">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M04 -->
+  <section class="card" data-id="m04">
+    <div class="head"><span class="num">임무 04</span><span class="name">행운의 잎사귀</span><span class="lock">🚫 장비</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m04a" data-pts="10"><span class="txt">하나의 잎사귀가 둥지에 닿지 않도록 완전히 제거됨</span><span class="pts">10</span></label>
+      <label class="row bonus"><input type="checkbox" id="m04b" data-pts="20" data-needs="m04a"><span class="txt">그리고 두 번째 잎사귀도 완전히 제거되었으며, 여치가 원래의 시작 위치에 있음</span><span class="pts">+20</span></label>
+      <label class="row"><input type="checkbox" id="m04x" data-kill="m04"><span class="txt" style="color:var(--red)">경기 종료 시 여치가 나뭇잎 서식지 밖으로 완전히 벗어남 → 이 임무 0점</span><span class="pts">0</span></label>
+      <div class="note">둥지는 나뭇잎과 여치를 담고 있는 임무 모형입니다. 나뭇잎 서식지는 둥지와 이를 둘러싼 매트 위 표시된 구역을 포함합니다. 경기 중 어느 때라도 여치가 서식지 밖으로 완전히 벗어났다면 보너스를 받을 수 없습니다.</div>
+    </div>
+    <div class="tries" data-tries="m04">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m04">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M05 -->
+  <section class="card" data-id="m05">
+    <div class="head"><span class="num">임무 05</span><span class="name">뻗어나가는 뿌리</span><span class="lock">🚫 장비</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="radio" name="m05" value="0" id="m05-0" checked><span class="txt">뻗어 나가지 않음</span><span class="pts">0</span></label>
+      <label class="row"><input type="radio" name="m05" value="10" id="m05-1"><span class="txt">식물 뿌리가 부분적으로 뻗어 나감</span><span class="pts">10</span></label>
+      <label class="row"><input type="radio" name="m05" value="20" id="m05-2"><span class="txt">식물 뿌리가 완전히 뻗어 나감</span><span class="pts">20</span></label>
+      <div class="note">이 임무에서는 하나의 조건으로만 점수를 획득할 수 있습니다.</div>
+    </div>
+    <div class="tries" data-tries="m05">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m05">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M06 -->
+  <section class="card" data-id="m06">
+    <div class="head"><span class="num">임무 06</span><span class="name">잎꾼개미의 대소동</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m06a"><span class="txt">개미가 둥지에 닿아 있음</span><span class="pts">조건</span></label>
+      <div class="row sub"><span class="txt">둥지 안에 들어 있는 잎사귀 조각 수 (조각당 10점)</span>
+        <span class="ctr"><button type="button" data-dec="m06n">−</button><output id="m06n">0</output><button type="button" data-inc="m06n">+</button></span></div>
+    </div>
+    <div class="tries" data-tries="m06">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m06">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M07 -->
+  <section class="card" data-id="m07">
+    <div class="head"><span class="num">임무 07</span><span class="name">거대한 곰팡이</span><span class="lock">🚫 장비</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m07a" data-pts="20"><span class="txt">균사체가 완전히 뻗어 나감</span><span class="pts">20</span></label>
+      <div class="row sub"><span class="txt"><b style="color:var(--accent)">보너스</b> 상대 팀의 완전히 뻗은 식물 뿌리와 연결된 수 (각 10점, 최대 2)</span>
+        <span class="ctr"><button type="button" data-dec="m07n">−</button><output id="m07n">0</output><button type="button" data-inc="m07n">+</button></span></div>
+      <div class="note">균사체와 식물 뿌리는 닿을 필요가 없습니다. 둘 다 완전히 뻗어 있으면 양 팀 모두 보너스를 받습니다. 원격 대회이거나 상대 팀이 없는 경우 보너스는 없습니다.</div>
+    </div>
+    <div class="tries" data-tries="m07">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m07">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M08 -->
+  <section class="card" data-id="m08">
+    <div class="head"><span class="num">임무 08</span><span class="name">덩굴</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m08a" data-pts="30"><span class="txt">덩굴이 매트에 닿아 있음</span><span class="pts">30</span></label>
+    </div>
+    <div class="tries" data-tries="m08">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m08">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M09 -->
+  <section class="card" data-id="m09">
+    <div class="head"><span class="num">임무 09</span><span class="name">연구 플랫폼</span><span class="lock">🚫 장비</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m09a" data-pts="10"><span class="txt">연구 플랫폼이 올려짐</span><span class="pts">10</span></label>
+      <label class="row"><input type="checkbox" id="m09b" data-pts="10"><span class="txt">무인 카메라가 배치됨</span><span class="pts">10</span></label>
+      <label class="row"><input type="checkbox" id="m09c" data-pts="10"><span class="txt">씨앗이 더 이상 나무에 닿아 있지 않음</span><span class="pts">10</span></label>
+    </div>
+    <div class="tries" data-tries="m09">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m09">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M10 -->
+  <section class="card" data-id="m10">
+    <div class="head"><span class="num">임무 10</span><span class="name">연약한 미세서식지</span><span class="lock">🚫 장비</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m10a" data-pts="10"><span class="txt">거미줄이 원래의 시작 위치에 있음</span><span class="pts">10</span></label>
+      <label class="row"><input type="checkbox" id="m10b" data-pts="10"><span class="txt">달팽이 서식지가 원래의 시작 위치에 있음</span><span class="pts">10</span></label>
+    </div>
+    <div class="tries" data-tries="m10">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m10">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M11 -->
+  <section class="card" data-id="m11">
+    <div class="head"><span class="num">임무 11</span><span class="name">과거로의 문</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m11a" data-pts="20"><span class="txt">뿌리 덮개가 내려가 매트에 닿아 있음</span><span class="pts">20</span></label>
+    </div>
+    <div class="tries" data-tries="m11">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m11">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M12 -->
+  <section class="card" data-id="m12">
+    <div class="head"><span class="num">임무 12</span><span class="name">숲의 장로</span><span class="lock">🚫 장비</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m12a" data-pts="20"><span class="txt">지지대가 완전히 세워져 나무에 닿아 있음</span><span class="pts">20</span></label>
+      <label class="row"><input type="checkbox" id="m12b" data-pts="10"><span class="txt">지지대 끈이 기둥에 감겨 있음</span><span class="pts">10</span></label>
+    </div>
+    <div class="tries" data-tries="m12">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m12">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M13 -->
+  <section class="card" data-id="m13">
+    <div class="head"><span class="num">임무 13</span><span class="name">핵심종</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m13a" data-pts="30"><span class="txt">팀의 핵심종이 복원 플랫폼에 있고 어린 나무들이 세워져 있음</span><span class="pts">30</span></label>
+    </div>
+    <div class="tries" data-tries="m13">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m13">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M14 -->
+  <section class="card" data-id="m14">
+    <div class="head"><span class="num">임무 14</span><span class="name">생명의 씨앗</span><span class="score">0</span></div>
+    <div class="body">
+      <div class="row"><span class="txt">숲 복원 스테이션 안에 들어 있는 씨앗 수 (각 5점)</span>
+        <span class="ctr"><button type="button" data-dec="m14n">−</button><output id="m14n">0</output><button type="button" data-inc="m14n">+</button></span></div>
+      <div class="row sub"><span class="txt"><b style="color:var(--accent)">보너스</b> 그중 매트에 닿아 있는 씨앗 수 (각 +5점)</span>
+        <span class="ctr"><button type="button" data-dec="m14b">−</button><output id="m14b">0</output><button type="button" data-inc="m14b">+</button></span></div>
+    </div>
+    <div class="tries" data-tries="m14">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m14">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- M15 -->
+  <section class="card" data-id="m15">
+    <div class="head"><span class="num">임무 15</span><span class="name">생물 중심 건축</span><span class="lock">🚫 장비</span><span class="score">0</span></div>
+    <div class="body">
+      <label class="row"><input type="checkbox" id="m15a" data-pts="10"><span class="txt">둥지 캐노피가 올려짐</span><span class="pts">10</span></label>
+      <label class="row"><input type="checkbox" id="m15b" data-pts="10"><span class="txt">정원 채광창이 완전히 밀어넣어짐</span><span class="pts">10</span></label>
+      <label class="row"><input type="checkbox" id="m15c" data-pts="10"><span class="txt">퇴비 해치가 완전히 열려 매트에 닿아 있음</span><span class="pts">10</span></label>
+      <div class="row sub"><span class="txt"><b style="color:var(--accent)">환경 보너스</b> 우리 경기장의 임무 모형이 위치한 도크 (+10, 해당 항목 완료 시)</span>
+        <select id="m15dock">
+          <option value="">도크 선택</option>
+          <option value="m15a">가. 광산 도크 → 둥지 캐노피</option>
+          <option value="m15b">나. 도시 도크 → 정원 채광창</option>
+          <option value="m15c">다. 농장 도크 → 퇴비 해치</option>
+        </select></div>
+      <div class="note">이 임무에서는 오직 하나의 보너스만 가능합니다. 도크 위치는 경기장 설치 가이드의 경기장 배치를 확인하세요.</div>
+    </div>
+    <div class="tries" data-tries="m15">
+      <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m15">+ 시도 추가</button></div>
+    </div>
+  </section>
+
+  <!-- GP -->
+  <section class="card" data-id="gp">
+    <div class="head"><span class="num">GP</span><span class="name">로봇 경기장에서 보여진 아름답고 소중한 프로정신</span><span class="score">0</span></div>
+    <div class="gp">
+      <label><input type="radio" name="gp" value="2" id="gp2"><b>2</b>발전 중</label>
+      <label><input type="radio" name="gp" value="3" id="gp3"><b>3</b>성취 완료</label>
+      <label><input type="radio" name="gp" value="4" id="gp4"><b>4</b>초과 달성</label>
+    </div>
+  </section>
+
+  <section class="cloud" id="cloud">
+    <h2>내 기록 (클라우드)</h2>
+    <div class="hint">하단 "저장" 버튼을 누르면 위에 적은 학생마다 각자 비밀번호로 점수가 저장됩니다. 같은 학교·학년반·이름과 비밀번호를 입력하면 어느 기기에서든 기록을 다시 볼 수 있습니다.</div>
+    <div class="row-btn"><button type="button" id="cloud-refresh">내 기록 불러오기</button><span class="hint" id="cloud-status"></span></div>
+    <div class="tblwrap"><table id="cloud-table" hidden><thead><tr><th>날짜</th><th>이름</th><th>경기</th><th>점수</th><th></th></tr></thead><tbody></tbody></table></div>
+  </section>
+</div>
+
+<div class="totalbar"><div class="in">
+  <div><div class="lbl">최종 점수</div><div class="max" id="summary">체크한 항목 0개</div></div>
+  <div class="big" id="total">0</div>
+  <button type="button" class="save" id="save">저장</button><button type="button" id="reset">초기화</button>
+</div></div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const TOK=[0,10,15,25,35,50,50];
+  const LIMITS={tok:[0,6],m02n:[0,9],m06n:[0,9],m07n:[0,2],m14n:[0,9],m14b:[0,9]};
+  const ctr={};
+  for(const k in LIMITS) ctr[k]=+$(k).textContent;
+
+  function on(id){return $(id)&&$(id).checked;}
+  function mission(id){
+    switch(id){
+      case 'eq': return on('eq1')?20:0;
+      case 'tok': return TOK[ctr.tok];
+      case 'm01': return (on('m01a')?20:0)+(on('m01a')&&on('m01b')?10:0);
+      case 'm02': return ctr.m02n*10;
+      case 'm03': return (on('m03a')?20:0)+(on('m03a')&&on('m03b')?10:0);
+      case 'm04': if(on('m04x')) return 0; return (on('m04a')?10:0)+(on('m04a')&&on('m04b')?20:0);
+      case 'm05': return +document.querySelector('input[name=m05]:checked').value;
+      case 'm06': return on('m06a')?ctr.m06n*10:0;
+      case 'm07': return on('m07a')?20+ctr.m07n*10:0;
+      case 'm08': return on('m08a')?30:0;
+      case 'm09': return (on('m09a')?10:0)+(on('m09b')?10:0)+(on('m09c')?10:0);
+      case 'm10': return (on('m10a')?10:0)+(on('m10b')?10:0);
+      case 'm11': return on('m11a')?20:0;
+      case 'm12': return (on('m12a')?20:0)+(on('m12b')?10:0);
+      case 'm13': return on('m13a')?30:0;
+      case 'm14': { if(ctr.m14b>ctr.m14n){ctr.m14b=ctr.m14n;$('m14b').textContent=ctr.m14b;} return ctr.m14n*5+ctr.m14b*5; }
+      case 'm15': { let s=(on('m15a')?10:0)+(on('m15b')?10:0)+(on('m15c')?10:0); const d=$('m15dock').value; if(d&&on(d)) s+=10; return s; }
+      case 'gp': { const r=document.querySelector('input[name=gp]:checked'); return r?+r.value:0; }
+    }
+    return 0;
+  }
+
+  function render(){
+    let total=0, count=0;
+    document.querySelectorAll('.card[data-id]').forEach(c=>{
+      const id=c.dataset.id, s=mission(id); total+=s;
+      const el=c.querySelector('.score'); el.textContent=s; el.classList.toggle('zero',s===0);
+      c.classList.toggle('off', id==='m04'&&on('m04x'));
+    });
+    document.querySelectorAll('input[data-needs]').forEach(b=>{ const ok=on(b.dataset.needs); b.disabled=!ok; if(!ok) b.checked=false; });
+    document.querySelectorAll('input[type=checkbox]:checked').forEach(()=>count++);
+    for(const k in LIMITS){ document.querySelector(`[data-dec="${k}"]`).disabled=ctr[k]<=LIMITS[k][0]; document.querySelector(`[data-inc="${k}"]`).disabled=ctr[k]>=LIMITS[k][1]; }
+    $('total').textContent=total;
+    $('summary').textContent=`체크한 항목 ${count}개 · 토큰 ${ctr.tok}개 남음`;
+    try{ localStorage.setItem('bioglow-draft', JSON.stringify(snapshot())); }catch(e){}
+  }
+  function snapshot(){
+    const o={ctr:{...ctr},chk:{},radio:{},text:{},dock:$('m15dock').value,members:[...document.querySelectorAll('.member')].map(r=>[r.querySelector('.m-grade').value,r.querySelector('.m-name').value]),tries:{}};
+    document.querySelectorAll('.tries').forEach(b=>{ o.tries[b.dataset.tries]=[...b.querySelectorAll('.try')].map(r=>[r.querySelector('.tsec').value,r.querySelector('.memo').value]); });
+    document.querySelectorAll('input[type=checkbox]').forEach(i=>o.chk[i.id]=i.checked);
+    document.querySelectorAll('input[type=radio]:checked').forEach(i=>o.radio[i.name]=i.value);
+    ['m-school','m-team','m-match','m-date'].forEach(id=>o.text[id]=$(id).value);
+    return o;
+  }
+  function restore(o){
+    if(!o) return;
+    for(const k in LIMITS) if(k in o.ctr){ ctr[k]=o.ctr[k]; $(k).textContent=ctr[k]; }
+    for(const id in o.chk) if($(id)) $(id).checked=o.chk[id];
+    for(const n in o.radio){ const r=document.querySelector(`input[name=${n}][value="${o.radio[n]}"]`); if(r) r.checked=true; }
+    for(const id in o.text) $(id).value=o.text[id];
+    $('m15dock').value=o.dock||'';
+    if(o.tries){ for(const mid in o.tries){ const box=document.querySelector(`[data-tries="${mid}"]`); if(!box) continue; box.querySelectorAll('.try').forEach(r=>r.remove()); o.tries[mid].forEach(([v,m])=>addTry(mid,v,m)); } }
+    if(o.members&&o.members.length){ document.querySelectorAll('.member').forEach((r,i)=>{ if(i>0) r.remove(); }); o.members.forEach(([g,n],i)=>{ const r=i>0?addName():document.querySelector('.member'); r.querySelector('.m-grade').value=g||''; r.querySelector('.m-name').value=n||''; }); }
+  }
+  function addName(){
+    const row=document.createElement('div'); row.className='member';
+    row.innerHTML='<input type="text" class="m-grade" placeholder="학년·반"><input type="text" class="m-name" placeholder="이름"><input type="password" class="m-pin" placeholder="비밀번호" autocomplete="off"><button type="button" class="rm" title="삭제">−</button>';
+    $('members').appendChild(row); return row;
+  }
+  $('add-name').addEventListener('click',()=>{ addName().querySelector('input').focus(); render(); });
+  $('members').addEventListener('click',e=>{ const b=e.target.closest('.rm'); if(b){ b.closest('.member').remove(); render(); } });
+  document.addEventListener('input',e=>{ if(e.target.closest('.meta')) render(); });
+
+  document.addEventListener('click',e=>{
+    const inc=e.target.closest('[data-inc]'), dec=e.target.closest('[data-dec]');
+    if(inc){ const k=inc.dataset.inc; ctr[k]=Math.min(LIMITS[k][1],ctr[k]+1); $(k).textContent=ctr[k]; render(); }
+    if(dec){ const k=dec.dataset.dec; ctr[k]=Math.max(LIMITS[k][0],ctr[k]-1); $(k).textContent=ctr[k]; render(); }
+  });
+  document.addEventListener('change',render);
+  $('reset').addEventListener('click',()=>{
+    document.querySelectorAll('input[type=checkbox]').forEach(i=>i.checked=false);
+    ['m-school','m-team','m-match','m-date'].forEach(id=>$(id).value='');
+    document.querySelectorAll('input[type=radio]').forEach(i=>i.checked=false);
+    $('m05-0').checked=true;
+    for(const k in LIMITS){ ctr[k]=k==='tok'?6:0; $(k).textContent=ctr[k]; }
+    $('m15dock').value='';
+    render();
+  });
+
+
+  // ---- 시도별 수행 시간 ----
+  const timers={};
+  function fmt(ms){ const t=Math.round(ms/100)/10; return t.toFixed(1); }
+  function addTry(mid,val,memo){
+    const box=document.querySelector(`[data-tries="${mid}"]`);
+    const n=box.querySelectorAll('.try').length+1;
+    const row=document.createElement('div'); row.className='try';
+    row.innerHTML=`<span class="k">${n}회</span><input type="text" class="tsec" inputmode="decimal" placeholder="초"><button type="button" class="sw" title="스톱워치">▶</button><input type="text" class="memo" placeholder="메모 (성공/실패, 수정점)"><button type="button" class="rm" title="삭제">−</button>`;
+    row.querySelector('.tsec').value=val||''; row.querySelector('.memo').value=memo||'';
+    box.appendChild(row); return row;
+  }
+  function renumber(box){ box.querySelectorAll('.try .k').forEach((k,i)=>k.textContent=(i+1)+'회'); }
+  document.addEventListener('click',e=>{
+    const add=e.target.closest('[data-addtry]');
+    if(add){ addTry(add.dataset.addtry).querySelector('.tsec').focus(); render(); return; }
+    const sw=e.target.closest('.try .sw');
+    if(sw){
+      const row=sw.closest('.try'), inp=row.querySelector('.tsec');
+      if(sw.classList.contains('run')){ clearInterval(timers[sw._id]); sw.classList.remove('run'); sw.textContent='▶'; inp.classList.add('ok'); render(); }
+      else { sw._id=sw._id||Math.random(); const t0=Date.now(); sw.classList.add('run'); sw.textContent='■'; inp.classList.remove('ok');
+        timers[sw._id]=setInterval(()=>{ inp.value=fmt(Date.now()-t0); },100); }
+      return;
+    }
+    const rm=e.target.closest('.try .rm');
+    if(rm){ const box=rm.closest('.tries'); rm.closest('.try').remove(); renumber(box); render(); }
+  });
+  document.addEventListener('input',e=>{ if(e.target.closest('.tries')) render(); });
+
+
+  // ---- Supabase 저장 ----
+  const SB_URL='https://odlyfhfwwfoueomwjkoh.supabase.co';
+  const SB_KEY='sb_publishable_B4GK5kSY45WkrdchYpMM1Q_Z7ixRsQA';
+  const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};  // 비밀번호는 저장하지 않음 (snapshot에서 제외)
+  let toastT; function toast(msg){ let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),2600); }
+  function members(){ return [...document.querySelectorAll('.member')].map(r=>({g:r.querySelector('.m-grade').value.trim(),n:r.querySelector('.m-name').value.trim(),p:r.querySelector('.m-pin').value})).filter(m=>m.g&&m.n); }
+  const ERR={BAD_PIN:'비밀번호가 틀렸거나 등록되지 않은 이름입니다',BAD_TOTAL:'점수 범위 오류'};
+  async function rpc(fn,args){ const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:H,body:JSON.stringify(args)}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+  function total(){ let t=0; document.querySelectorAll('.card[data-id]').forEach(c=>t+=mission(c.dataset.id)); return t; }
+  $('save').addEventListener('click',async()=>{
+    const school=$('m-school').value.trim(), ms=members();
+    if(!school||!ms.length){ toast('학교, 학년반, 이름을 먼저 적어주세요'); return; }
+    if(ms.some(m=>!m.p)){ toast('각자 비밀번호를 입력하세요'); return; }
+    const snap=snapshot(); const gpr=document.querySelector('input[name=gp]:checked'); const t=total();
+    $('save').disabled=true; const ok=[], bad=[];
+    for(const m of ms){
+      try{ const res=await rpc('fll_save_score',{p_school:school,p_grade:m.g,p_name:m.n,p_pin:m.p,p_team:$('m-team').value.trim()||null,p_match:$('m-match').value.trim()||null,p_date:$('m-date').value||null,p_total:t,p_gp:gpr?+gpr.value:null,p_detail:snap,p_tries:snap.tries||null});
+        if(res==='OK') ok.push(m.n); else bad.push(m.n+': '+(ERR[res]||res)); }
+      catch(e){ bad.push(m.n+': 연결 실패'); console.error(e); }
+    }
+    $('save').disabled=false;
+    if(ok.length) toast(`저장 완료 · ${t}점 (${ok.join(', ')})`);
+    if(bad.length) setTimeout(()=>toast('저장 안 됨 → '+bad.join(' / ')),ok.length?2700:0);
+    if(ok.length) loadMine();
+  });
+  async function loadMine(){
+    const school=$('m-school').value.trim(), ms=members(); const st=$('cloud-status'), tb=$('cloud-table');
+    if(!school||!ms.length){ st.textContent='학교, 학년반, 이름을 적은 뒤 눌러주세요'; return; }
+    const m=ms[0]; if(!m.p){ st.textContent=m.n+'의 비밀번호를 입력하세요'; return; }
+    st.textContent='불러오는 중…';
+    try{
+      const rows=await rpc('fll_my_scores',{p_school:school,p_grade:m.g,p_name:m.n,p_pin:m.p});
+      const body=tb.querySelector('tbody'); body.innerHTML='';
+      rows.forEach(x=>{ const tr=document.createElement('tr'); const d=new Date(x.created_at); const ds=`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        tr.innerHTML=`<td>${ds}</td><td>${x.student_name}</td><td>${x.match_label||''}</td><td class="t">${x.total}</td><td><button type="button" class="ld">불러오기</button></td>`;
+        tr.querySelector('.ld').addEventListener('click',()=>{ restore(x.detail); render(); toast('기록을 불러왔습니다'); window.scrollTo({top:0,behavior:'smooth'}); }); body.appendChild(tr); });
+      tb.hidden=!rows.length; st.textContent=rows.length?`${m.g} ${m.n} · 최근 ${rows.length}건`:'기록이 없거나 비밀번호가 틀렸습니다';
+    }catch(e){ st.textContent='불러오기 실패: 인터넷 연결을 확인하세요'; console.error(e); }
+  }
+  $('cloud-refresh').addEventListener('click',loadMine);
+
+  try{ restore(JSON.parse(localStorage.getItem('bioglow-draft'))); }catch(e){}
+  render();
+})();
+</script>
+
+</body>
+</html>
