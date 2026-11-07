@@ -6,7 +6,7 @@
 <title>BIOGLOW 관리자 대시보드</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
 <style>
-*{box-sizing:border-box}html,body{margin:0}
+*{box-sizing:border-box}html,body{margin:0}[hidden]{display:none!important}
 :root{
   --bg:#f3f6f1; --card:#ffffff; --fg:#17231b; --muted:#5d6b61; --line:#d4ddd3;
   --accent:#1f7a4d; --accent-soft:#e3f1e8; --red:#c8102e; --red-soft:#fbe8eb; --bar:#4fc784;
@@ -148,11 +148,11 @@ tbody tr{cursor:pointer}
 
   // ---- gate ----
   async function enter(){
-    const code=$('gate-code').value; $('gate-msg').textContent='확인 중…';
+    const code=$('gate-code').value.trim(); if(!code){ $('gate-msg').textContent='관리자 코드를 입력하세요'; return; } $('gate-msg').textContent='확인 중…';
     try{ const st=await rpc('fll_admin_students',{p_code:code});
       // 코드가 틀리면 빈 배열, 맞으면 학생 목록(0명일 수도 있음) → 점수 조회로 한 번 더 확인
       const sc=await rpc('fll_admin_scores',{p_code:code});
-      if(!st.length&&!sc.length){ const probe=await rpc('fll_admin_reset_pin',{p_code:code,p_school:'__probe__',p_grade:'',p_name:'',p_new:'xxxx'}); if(probe==='BAD_CODE'){ $('gate-msg').textContent='코드가 맞지 않습니다'; return; } }
+      if(!st.length&&!sc.length){ const probe=await rpc('fll_admin_reset_pin',{p_code:code,p_school:'__probe__',p_grade:'',p_name:'',p_new:'xxxx'}); if(probe==='BAD_CODE'){ $('gate-msg').textContent='코드가 맞지 않습니다. 한/영 전환과 띄어쓰기를 확인하세요'; return; } }
       CODE=code; try{sessionStorage.setItem('bioglow-admin',code)}catch(e){}
       $('gate').hidden=true; $('app').hidden=false; studentsList=st; all=sc; buildFilters(); render(); $('k-last').textContent=all.length?fmt(all[all.length-1].created_at):'-';
     }catch(e){ $('gate-msg').textContent='연결 실패: 인터넷을 확인하세요'; console.error(e); }
