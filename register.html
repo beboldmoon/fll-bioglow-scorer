@@ -36,10 +36,18 @@ button.ghost{background:var(--accent-soft);color:var(--accent);border-color:var(
 .tabs button{flex:1;background:var(--card);color:var(--muted);border-color:var(--line)}
 .tabs button.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 a{color:var(--accent);font-weight:700}
+.offline-banner{background:#fff3cd;color:#5b4300;border:1px solid #f0d27a;border-radius:10px;padding:12px 14px;margin:0 auto 14px;max-width:720px;font-size:14px;line-height:1.5;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.offline-banner a.go{background:#1f7a4d;color:#fff;text-decoration:none;font-weight:700;padding:9px 16px;border-radius:999px;white-space:nowrap}
+@media (prefers-color-scheme: dark){.offline-banner{background:#3a3010;color:#ffe9a8;border-color:#7a6220}}
+.notice{background:var(--card);border:1px dashed var(--red);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5}
+.notice b:first-child{color:var(--red);margin-right:4px}
 </style>
 </head>
 <body>
+<div class="offline-banner" id="offline-banner" hidden><span><b>이 파일은 컴퓨터에 저장된 사본입니다.</b> 저장·불러오기는 인터넷 사이트에서만 동작합니다. 아래 버튼을 눌러 사이트에서 이용하세요.</span><a class="go" href="https://beboldmoon.github.io/fll-bioglow-scorer/register.html">비밀번호 만들기 사이트로 이동</a></div>
+<script>if(location.protocol==='file:'){document.getElementById('offline-banner').hidden=false;}</script>
 <div class="wrap">
+  <div class="notice"><b>주의</b> 이 채점표는 2026-27 BIOGLOW 로봇 게임 점수표를 바탕으로 만들었고, 2026년 10월 14일 FIRST 룰 업데이트와 2026년 11월 2일 FLL 코리아 임시 판정 기준까지 반영한 <b>연습용 참고 자료</b>입니다. FIRST LEGO League의 공식 자료가 아니며, 실제 대회 점수는 심판 판정과 공식 룰북·최신 룰 업데이트를 따릅니다. 룰이 바뀌면 여기 점수와 다를 수 있습니다.</div>
   <div>
     <div class="eyebrow">FIRST LEGO League Challenge · 2026-27 BIOGLOW</div>
     <h1>내 비밀번호 만들기</h1>

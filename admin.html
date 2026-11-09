@@ -62,9 +62,16 @@ tbody tr{cursor:pointer}
 .spark div span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted)}
 #gate{max-width:360px;margin:60px auto;display:flex;flex-direction:column;gap:10px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;z-index:30}
+.offline-banner{background:#fff3cd;color:#5b4300;border:1px solid #f0d27a;border-radius:10px;padding:12px 14px;margin:0 auto 14px;max-width:720px;font-size:14px;line-height:1.5;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.offline-banner a.go{background:#1f7a4d;color:#fff;text-decoration:none;font-weight:700;padding:9px 16px;border-radius:999px;white-space:nowrap}
+@media (prefers-color-scheme: dark){.offline-banner{background:#3a3010;color:#ffe9a8;border-color:#7a6220}}
+.notice{background:var(--card);border:1px dashed var(--red);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5}
+.notice b:first-child{color:var(--red);margin-right:4px}
 </style>
 </head>
 <body>
+<div class="offline-banner" id="offline-banner" hidden><span><b>이 파일은 컴퓨터에 저장된 사본입니다.</b> 저장·불러오기는 인터넷 사이트에서만 동작합니다. 아래 버튼을 눌러 사이트에서 이용하세요.</span><a class="go" href="https://beboldmoon.github.io/fll-bioglow-scorer/admin.html">관리자 대시보드 사이트로 이동</a></div>
+<script>if(location.protocol==='file:'){document.getElementById('offline-banner').hidden=false;}</script>
 
 <div id="gate" class="card">
   <div class="eyebrow">관리자 전용</div>
@@ -75,6 +82,7 @@ tbody tr{cursor:pointer}
 </div>
 
 <div class="wrap" id="app" hidden>
+  <div class="notice"><b>주의</b> 이 채점표는 2026-27 BIOGLOW 로봇 게임 점수표를 바탕으로 만들었고, 2026년 10월 14일 FIRST 룰 업데이트와 2026년 11월 2일 FLL 코리아 임시 판정 기준까지 반영한 <b>연습용 참고 자료</b>입니다. FIRST LEGO League의 공식 자료가 아니며, 실제 대회 점수는 심판 판정과 공식 룰북·최신 룰 업데이트를 따릅니다. 룰이 바뀌면 여기 점수와 다를 수 있습니다.</div>
   <header>
     <div>
       <div class="eyebrow">FIRST LEGO League Challenge · 2026-27 BIOGLOW</div>
@@ -109,7 +117,7 @@ tbody tr{cursor:pointer}
       <div class="tblwrap"><table id="students">
         <thead><tr>
           <th data-k="school">학교</th><th data-k="grade">학년반</th><th data-k="name">이름</th>
-          <th data-k="count" class="n">기록</th><th data-k="best" class="n">최고</th><th data-k="latest" class="n">최근</th><th data-k="gp" class="n">GP</th><th data-k="last">최근 저장</th>
+          <th data-k="count" class="n">기록</th><th data-k="best" class="n">최고</th><th data-k="latest" class="n">최근</th><th data-k="gp" class="n">GP</th><th data-k="last">최근 경기</th>
         </tr></thead><tbody></tbody>
       </table></div>
     </div>
@@ -209,14 +217,14 @@ tbody tr{cursor:pointer}
     return all.filter(r=>(!sc||r.school===sc)&&(!gr||r.grade_class===gr)&&(!mt||r.match_label===mt)&&(!nm||r.student_name.includes(nm))
       &&(!f||r.created_at.slice(0,10)>=f)&&(!t||r.created_at.slice(0,10)<=t));
   }
-  function fmt(iso){ const d=new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+  function fmt(iso){ if(!iso) return '-'; const d=new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 
   function render(){
     const rows=filtered();
     // group by student
     const g=new Map();
     rows.forEach(r=>{ const k=`${r.school}|${r.grade_class}|${r.student_name}`; if(!g.has(k)) g.set(k,{school:r.school,grade:r.grade_class,name:r.student_name,recs:[]}); g.get(k).recs.push(r); });
-    const students=[...g.values()].map(s=>{ const last=s.recs[s.recs.length-1]; return {...s,count:s.recs.length,best:Math.max(...s.recs.map(r=>r.total)),latest:last.total,gp:last.gp||'',last:last.created_at,lastRec:last}; });
+    const students=[...g.values()].map(s=>{ const last=s.recs[s.recs.length-1]; return {...s,count:s.recs.length,best:Math.max(...s.recs.map(r=>r.total)),latest:last.total,gp:last.gp||'',last:last.match_at||last.created_at,lastRec:last}; });
     students.sort((a,b)=>{ const x=a[sortKey],y=b[sortKey]; return (x>y?1:x<y?-1:0)*sortDir; });
 
     $('k-students').textContent=students.length; $('k-records').textContent=rows.length;
@@ -264,12 +272,12 @@ tbody tr{cursor:pointer}
     const p=$('student-panel'); p.hidden=false;
     $('sp-title').textContent=`${s.school} ${s.grade} ${s.name} · ${s.count}건 · 최고 ${s.best}점`;
     const sp=$('sp-spark'); sp.innerHTML=''; const mx=Math.max(1,...s.recs.map(r=>r.total));
-    s.recs.forEach(r=>{ sp.insertAdjacentHTML('beforeend',`<div style="height:${Math.max(4,r.total/mx*100)}%" title="${fmt(r.created_at)} ${r.total}점"><span>${r.total}</span></div>`); });
+    s.recs.forEach(r=>{ sp.insertAdjacentHTML('beforeend',`<div style="height:${Math.max(4,r.total/mx*100)}%" title="${fmt(r.match_at||r.created_at)} ${r.total}점"><span>${r.total}</span></div>`); });
     const h=$('sp-hist'); h.innerHTML='';
     [...s.recs].reverse().forEach(r=>{
       const d=r.detail||{}; const parts=MISSIONS.map(([id,name])=>{ const v=missionScore(d,id); return v?`<span><b>${name.replace(/^\d+ /,'')}</b> ${v}</span>`:''; }).filter(Boolean).join('');
       const tries=d.tries?Object.entries(d.tries).filter(([,a])=>a&&a.length).map(([m,a])=>`<span><b>${m.toUpperCase()} 시도</b> ${a.map(([t,memo])=>t?t+'초'+(memo?'('+esc(memo)+')':''):'').filter(Boolean).join(', ')}</span>`).join(''):'';
-      h.insertAdjacentHTML('beforeend',`<div class="hrow"><span>${fmt(r.created_at)}</span><span>${esc(r.match_label||'')} ${r.team_name?'· '+esc(r.team_name):''}</span><span class="t">${r.total}</span><span class="gp">GP ${r.gp||'-'}</span><div class="detail">${parts||'<span>체크 항목 없음</span>'}${tries}</div></div>`);
+      h.insertAdjacentHTML('beforeend',`<div class="hrow"><span>${fmt(r.match_at||r.created_at)}</span><span>${esc(r.match_label||'')} ${r.team_name?'· '+esc(r.team_name):''}</span><span class="t">${r.total}</span><span class="gp">GP ${r.gp||'-'}</span><div class="detail">${parts||'<span>체크 항목 없음</span>'}${tries}</div></div>`);
     });
     p.scrollIntoView({behavior:'smooth',block:'start'});
   }
@@ -282,8 +290,8 @@ tbody tr{cursor:pointer}
   $('school-add').addEventListener('click',addSchool); $('school-new').addEventListener('keydown',e=>{ if(e.key==='Enter') addSchool(); });
   document.querySelectorAll('#students th').forEach(th=>th.addEventListener('click',()=>{ const k=th.dataset.k; if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=k==='name'||k==='school'||k==='grade'?1:-1; } render(); }));
   $('csv').addEventListener('click',()=>{
-    const rows=filtered(); const head=['저장시각','학교','학년반','이름','팀명','경기','경기일','총점','GP',...MISSIONS.map(m=>m[1])];
-    const lines=[head.join(',')].concat(rows.map(r=>[new Date(r.created_at).toLocaleString('ko-KR'),r.school,r.grade_class,r.student_name,r.team_name||'',r.match_label||'',r.match_date||'',r.total,r.gp||'',...MISSIONS.map(([id])=>missionScore(r.detail||{},id))].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')));
+    const rows=filtered(); const head=['저장시각','학교','학년반','이름','팀명','경기','경기일시','총점','GP',...MISSIONS.map(m=>m[1])];
+    const lines=[head.join(',')].concat(rows.map(r=>[new Date(r.created_at).toLocaleString('ko-KR'),r.school,r.grade_class,r.student_name,r.team_name||'',r.match_label||'',r.match_at?new Date(r.match_at).toLocaleString('ko-KR'):(r.match_date||''),r.total,r.gp||'',...MISSIONS.map(([id])=>missionScore(r.detail||{},id))].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')));
     const blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bioglow_scores_${new Date().toISOString().slice(0,10)}.csv`; a.click();
   });
 })();

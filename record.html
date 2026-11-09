@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIOGLOW 경기 상세</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+*{box-sizing:border-box}html,body{margin:0}[hidden]{display:none!important}
+:root{
+  --bg:#f3f6f1; --card:#ffffff; --fg:#17231b; --muted:#5d6b61; --line:#d4ddd3;
+  --accent:#1f7a4d; --accent-soft:#e3f1e8; --red:#c8102e; --red-soft:#fbe8eb; --bar:#4fc784;
+  --font:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121914; --card:#1b241e; --fg:#eef3ee; --muted:#9fb0a4; --line:#2f3d33;
+  --accent:#4fc784; --accent-soft:#1f3328; --red:#ff6b7f; --red-soft:#3a2126; --bar:#4fc784; color-scheme:dark } }
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.5;padding:16px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{margin:0;font-size:24px;font-weight:900;line-height:1.25;text-wrap:balance}
+h2{margin:0 0 8px;font-size:15px;font-weight:700}
+a{color:var(--accent);font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.meta .l{font-size:12px;color:var(--muted)}
+.meta .v{font-weight:700}
+.total{display:flex;align-items:baseline;gap:10px}
+.total .big{font-size:44px;font-weight:900;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums}
+.total .gp{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:700}
+td.n{text-align:right;white-space:nowrap}
+td.n b{color:var(--accent)}
+td.n.zero{color:var(--muted)}
+.items{font-size:13px;color:var(--muted)}
+.items span{display:inline-block;margin-right:8px}
+.items span.on{color:var(--fg)}
+.items span.on::before{content:"✓ ";color:var(--accent);font-weight:900}
+.items span.off::before{content:"· "}
+.bar{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--bar)}
+.tries{font-size:13px;color:var(--muted);margin-top:4px}
+.tries b{color:var(--fg)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button,a.btn{font:inherit;font-weight:700;font-size:14px;padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer;text-decoration:none;display:inline-block}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:500}
+input,select{font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);width:100%}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.msg{font-size:13.5px;color:var(--red);font-weight:700;min-height:1.4em}
+.muted{color:var(--muted);font-size:13px}
+.offline-banner{background:#fff3cd;color:#5b4300;border:1px solid #f0d27a;border-radius:10px;padding:12px 14px;font-size:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.offline-banner a.go{background:#1f7a4d;color:#fff;text-decoration:none;font-weight:700;padding:9px 16px;border-radius:999px}
+.notice{background:var(--card);border:1px dashed var(--red);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5}
+.notice b:first-child{color:var(--red);margin-right:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="offline-banner" id="offline-banner" hidden><span><b>이 파일은 컴퓨터에 저장된 사본입니다.</b> 기록 조회는 사이트에서만 동작합니다.</span><a class="go" href="https://beboldmoon.github.io/fll-bioglow-scorer/">사이트로 이동</a></div>
+  <script>if(location.protocol==='file:'){document.getElementById('offline-banner').hidden=false;}</script>
+
+  <div class="notice"><b>주의</b> 이 채점표는 2026-27 BIOGLOW 로봇 게임 점수표를 바탕으로 만들었고, 2026년 10월 14일 FIRST 룰 업데이트와 2026년 11월 2일 FLL 코리아 임시 판정 기준까지 반영한 <b>연습용 참고 자료</b>입니다. FIRST LEGO League의 공식 자료가 아니며, 실제 대회 점수는 심판 판정과 공식 룰북·최신 룰 업데이트를 따릅니다. 룰이 바뀌면 여기 점수와 다를 수 있습니다.</div>
+  <div>
+    <div class="eyebrow">FIRST LEGO League Challenge · 2026-27 BIOGLOW</div>
+    <h1 id="title">경기 상세</h1>
+    <div class="muted"><a href="index.html">← 채점표로 돌아가기</a></div>
+  </div>
+
+  <form class="card" id="auth" hidden>
+    <h2>본인 확인</h2>
+    <div class="grid4">
+      <label>학교 <select id="a-school"><option value="">학교 선택</option></select></label>
+      <label>학년·반 <input id="a-grade" placeholder="예: 5-2" required></label>
+      <label>이름 <input id="a-name" required></label>
+      <label>비밀번호 <input id="a-pin" type="password" required></label>
+    </div>
+    <div class="btns" style="margin-top:10px"><button type="submit" class="primary">기록 보기</button></div>
+    <div class="msg" id="a-msg"></div>
+  </form>
+
+  <div id="view" hidden>
+    <div class="card">
+      <div class="total"><span class="big" id="v-total">0</span><span>점</span><span class="gp" id="v-gp"></span></div>
+      <div class="meta" style="margin-top:10px">
+        <div><div class="l">경기</div><div class="v" id="v-match"></div></div>
+        <div><div class="l">경기 일시</div><div class="v" id="v-at"></div></div>
+        <div><div class="l">학생</div><div class="v" id="v-who"></div></div>
+        <div><div class="l">팀명</div><div class="v" id="v-team"></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2>임무별 점수</h2>
+      <table><thead><tr><th>임무</th><th>달성 항목</th><th style="text-align:right">점수</th></tr></thead><tbody id="v-rows"></tbody></table>
+    </div>
+
+    <div class="card" style="margin-top:12px" id="v-tries-card" hidden>
+      <h2>시도별 수행 시간</h2>
+      <div id="v-tries"></div>
+    </div>
+
+    <div class="btns" style="margin-top:12px">
+      <button type="button" class="primary" id="load-to-sheet">이 기록을 채점표에 불러오기</button>
+      <a class="btn" href="index.html">내 기록 목록</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SB_URL='https://odlyfhfwwfoueomwjkoh.supabase.co';
+  const SB_KEY='sb_publishable_B4GK5kSY45WkrdchYpMM1Q_Z7ixRsQA';
+  const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+  const $=id=>document.getElementById(id);
+  async function rpc(fn,args){ const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:H,body:JSON.stringify(args)}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+  const id=+new URLSearchParams(location.search).get('id');
+
+  // 임무 정의: [id, 이름, 최대점, 항목 설명 함수]
+  const TOK=[0,10,15,25,35,50,50];
+  const M=[
+    ['eq','장비 검사',20,d=>[['로봇·장비가 출발구역 안, 높이 제한 통과',on(d,'eq1')]]],
+    ['tok','정밀 토큰',50,d=>[[`남은 토큰 ${c(d,'tok',6)}개`,true]]],
+    ['m01','01 드론 조사',30,d=>[['드론이 매트에서 떨어짐',on(d,'m01a')],['보너스: 라이다 지도 뒤집힘 + 스캔 마커',on(d,'m01a')&&on(d,'m01b')]]],
+    ['m02','02 씨앗 퍼트리기',null,d=>[[`떨어진 씨앗 ${c(d,'m02n')}개`,c(d,'m02n')>0]]],
+    ['m03','03 바위 뒤집기',30,d=>[['연구 깃발 내려감',on(d,'m03a')],['보너스: 바위 원위치',on(d,'m03a')&&on(d,'m03b')]]],
+    ['m04','04 행운의 잎사귀',30,d=>on(d,'m04x')?[['여치가 서식지 밖으로 벗어남 → 0점',true]]:[['잎사귀 1개 제거',on(d,'m04a')],['보너스: 2번째 잎사귀 + 여치 원위치',on(d,'m04a')&&on(d,'m04b')]]],
+    ['m05','05 뻗어나가는 뿌리',20,d=>[[{'10':'부분적으로 뻗음','20':'완전히 뻗음'}[(d.radio||{}).m05]||'뻗지 않음',+((d.radio||{}).m05||0)>0]]],
+    ['m06','06 잎꾼개미',null,d=>[['개미가 둥지에 닿음',on(d,'m06a')],[`잎사귀 조각 ${c(d,'m06n')}개`,c(d,'m06n')>0]]],
+    ['m07','07 거대한 곰팡이',40,d=>[['균사체 완전히 뻗음',on(d,'m07a')],[`보너스: 상대 뿌리 연결 ${c(d,'m07n')}개`,c(d,'m07n')>0]]],
+    ['m08','08 덩굴',30,d=>[['덩굴이 매트에 닿음',on(d,'m08a')]]],
+    ['m09','09 연구 플랫폼',30,d=>[['플랫폼 올려짐',on(d,'m09a')],['무인 카메라 배치',on(d,'m09b')],['씨앗이 나무에서 떨어짐',on(d,'m09c')]]],
+    ['m10','10 미세서식지',20,d=>[['거미줄 원위치',on(d,'m10a')],['달팽이 서식지 원위치',on(d,'m10b')]]],
+    ['m11','11 과거로의 문',20,d=>[['뿌리 덮개 내려감',on(d,'m11a')]]],
+    ['m12','12 숲의 장로',30,d=>[['지지대 세워짐',on(d,'m12a')],['끈이 기둥에 감김',on(d,'m12b')]]],
+    ['m13','13 핵심종',30,d=>[['핵심종 + 어린 나무',on(d,'m13a')]]],
+    ['m14','14 생명의 씨앗',null,d=>[[`스테이션 안 씨앗 ${c(d,'m14n')}개`,c(d,'m14n')>0],[`보너스: 매트에 닿은 씨앗 ${c(d,'m14b')}개`,c(d,'m14b')>0]]],
+    ['m15','15 생물 중심 건축',40,d=>[['둥지 캐노피',on(d,'m15a')],['정원 채광창',on(d,'m15b')],['퇴비 해치',on(d,'m15c')],['환경 보너스 (도크 일치)',!!(d.dock&&on(d,d.dock))]]],
+  ];
+  function on(d,k){ return !!((d.chk||{})[k]); }
+  function c(d,k,def=0){ const v=(d.ctr||{})[k]; return v==null?def:v; }
+  function score(d,idm){
+    const r=(d.radio||{});
+    switch(idm){
+      case 'eq': return on(d,'eq1')?20:0;
+      case 'tok': return TOK[c(d,'tok',6)]||0;
+      case 'm01': return (on(d,'m01a')?20:0)+(on(d,'m01a')&&on(d,'m01b')?10:0);
+      case 'm02': return c(d,'m02n')*10;
+      case 'm03': return (on(d,'m03a')?20:0)+(on(d,'m03a')&&on(d,'m03b')?10:0);
+      case 'm04': if(on(d,'m04x')) return 0; return (on(d,'m04a')?10:0)+(on(d,'m04a')&&on(d,'m04b')?20:0);
+      case 'm05': return +(r.m05||0);
+      case 'm06': return on(d,'m06a')?c(d,'m06n')*10:0;
+      case 'm07': return on(d,'m07a')?20+c(d,'m07n')*10:0;
+      case 'm08': return on(d,'m08a')?30:0;
+      case 'm09': return (on(d,'m09a')?10:0)+(on(d,'m09b')?10:0)+(on(d,'m09c')?10:0);
+      case 'm10': return (on(d,'m10a')?10:0)+(on(d,'m10b')?10:0);
+      case 'm11': return on(d,'m11a')?20:0;
+      case 'm12': return (on(d,'m12a')?20:0)+(on(d,'m12b')?10:0);
+      case 'm13': return on(d,'m13a')?30:0;
+      case 'm14': return c(d,'m14n')*5+c(d,'m14b')*5;
+      case 'm15': { let s=(on(d,'m15a')?10:0)+(on(d,'m15b')?10:0)+(on(d,'m15c')?10:0); if(d.dock&&on(d,d.dock)) s+=10; return s; }
+    }
+    return 0;
+  }
+  const esc=s=>String(s??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  function fmt(iso){ if(!iso) return '-'; const d=new Date(iso); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+
+  function render(x){
+    $('auth').hidden=true; $('view').hidden=false;
+    const d=x.detail||{};
+    document.title=`${x.match_label||'경기'} · ${x.total}점`;
+    $('title').textContent=`${x.match_label||'(이름 없음)'} · ${x.total}점`;
+    $('v-total').textContent=x.total; $('v-gp').textContent=x.gp?`GP ${x.gp}`:'';
+    $('v-match').textContent=x.match_label||'-'; $('v-at').textContent=fmt(x.match_at||x.created_at);
+    $('v-who').textContent=`${x.school} ${x.grade_class} ${x.student_name}`; $('v-team').textContent=x.team_name||'-';
+    const tb=$('v-rows'); tb.innerHTML='';
+    M.forEach(([idm,name,max,items])=>{
+      const sc=score(d,idm);
+      const its=items(d).map(([t,ok])=>`<span class="${ok?'on':'off'}">${esc(t)}</span>`).join('');
+      const bar=max?`<div class="bar"><i style="width:${Math.min(100,sc/max*100)}%"></i></div>`:'';
+      tb.insertAdjacentHTML('beforeend',`<tr><td><b>${esc(name)}</b>${bar}</td><td class="items">${its}</td><td class="n ${sc?'':'zero'}"><b>${sc}</b>${max?` <span class="muted">/ ${max}</span>`:''}</td></tr>`);
+    });
+    const tries=d.tries||{}; const ent=Object.entries(tries).filter(([,a])=>a&&a.some(([t,m])=>t||m));
+    $('v-tries-card').hidden=!ent.length; $('v-tries').innerHTML=ent.map(([mid,a])=>{ const name=(M.find(m=>m[0]===mid)||[])[1]||mid; return `<div class="tries"><b>${esc(name)}</b>: ${a.map(([t,m],i)=>`${i+1}회 ${t?t+'초':'-'}${m?' ('+esc(m)+')':''}`).join(' · ')}</div>`; }).join('');
+    $('load-to-sheet').onclick=()=>{ try{ localStorage.setItem('bioglow-draft',JSON.stringify(d)); }catch(e){} location.href='index.html'; };
+  }
+
+  async function fetchAndShow(me){
+    const rows=await rpc('fll_my_scores',{p_school:me.school,p_grade:me.grade,p_name:me.name,p_pin:me.pin});
+    const x=rows.find(r=>r.id===id);
+    if(!x){ return rows.length?'NOT_MINE':'BAD'; }
+    try{ sessionStorage.setItem('bioglow-me',JSON.stringify(me)); }catch(e){}
+    render(x); return 'OK';
+  }
+  async function showAuth(msg){
+    $('auth').hidden=false; $('a-msg').textContent=msg||'';
+    try{ const rows=await rpc('fll_schools',{}); $('a-school').innerHTML='<option value="">학교 선택</option>'+rows.map(r=>`<option>${esc(r.name)}</option>`).join(''); }catch(e){}
+  }
+  $('auth').addEventListener('submit',async e=>{ e.preventDefault();
+    const me={school:$('a-school').value,grade:$('a-grade').value.trim(),name:$('a-name').value.trim(),pin:$('a-pin').value};
+    try{ const r=await fetchAndShow(me); if(r!=='OK') $('a-msg').textContent=r==='NOT_MINE'?'이 기록은 입력한 학생의 기록이 아닙니다':'비밀번호가 틀렸거나 등록되지 않은 이름입니다'; }
+    catch(err){ $('a-msg').textContent='연결 실패: 인터넷을 확인하세요'; }
+  });
+
+  (async()=>{
+    if(!id){ $('title').textContent='기록을 찾을 수 없습니다'; showAuth('주소에 기록 번호가 없습니다. 채점표의 내 기록에서 다시 눌러주세요.'); return; }
+    let me=null; try{ me=JSON.parse(sessionStorage.getItem('bioglow-me')); }catch(e){}
+    if(me){ try{ const r=await fetchAndShow(me); if(r==='OK') return; }catch(e){} }
+    showAuth(me?'본인 확인이 필요합니다':'');
+  })();
+})();
+</script>
+</body>
+</html>

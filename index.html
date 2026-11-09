@@ -67,6 +67,7 @@ header p{margin:0;color:var(--muted);font-size:14px}
 .ctr button:disabled{opacity:.35;cursor:default}
 .ctr output{min-width:34px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
 .note{font-size:12.5px;color:var(--note);font-style:italic;padding:6px 0 2px;line-height:1.45}
+.note.upd{font-style:normal;background:var(--accent-soft);border-left:3px solid var(--accent);padding:6px 8px;border-radius:0 6px 6px 0;margin-top:6px;color:var(--fg)}
 select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);max-width:100%}
 .tries{border-top:1px solid var(--line);padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px}
 .tries .tl{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
@@ -87,10 +88,16 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
 .cloud th{font-size:12px;color:var(--muted);font-weight:700}
 .cloud td.t{font-weight:900;color:var(--accent)}
 .cloud .tblwrap{overflow-x:auto}
-.cloud button.ld{font:inherit;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer}
+.cloud a.rec{color:var(--fg);font-weight:700;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.cloud a.ld{text-decoration:none;display:inline-block}
+.cloud button.ld,.cloud a.ld{font:inherit;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer}
 .cloud .row-btn{display:flex;gap:8px;flex-wrap:wrap}
 .cloud .row-btn button{font:inherit;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;z-index:30;max-width:90vw;text-align:center}
+.dupbox{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--card);color:var(--fg);border:2px solid var(--red);border-radius:12px;padding:14px 16px;z-index:31;max-width:min(92vw,520px);font-size:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.dupbox .btns{display:flex;gap:8px;justify-content:flex-end}
+.dupbox button{font:inherit;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--accent);cursor:pointer}
+.dupbox #dup-ow{background:var(--red);color:#fff;border-color:var(--red)}
 .totalbar button.save{background:var(--total-fg);color:var(--total-bg)}
 .gp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px}
 .gp label{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1px solid var(--line);border-radius:8px;cursor:pointer;text-align:center;font-size:13px}
@@ -108,12 +115,20 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
 .totalbar button{font:inherit;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.score{transition:color .2s}}
+.offline-banner{background:#fff3cd;color:#5b4300;border:1px solid #f0d27a;border-radius:10px;padding:12px 14px;margin:0 auto 14px;max-width:720px;font-size:14px;line-height:1.5;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.offline-banner a.go{background:#1f7a4d;color:#fff;text-decoration:none;font-weight:700;padding:9px 16px;border-radius:999px;white-space:nowrap}
+@media (prefers-color-scheme: dark){.offline-banner{background:#3a3010;color:#ffe9a8;border-color:#7a6220}}
+.notice{background:var(--card);border:1px dashed var(--red);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5}
+.notice b:first-child{color:var(--red);margin-right:4px}
 </style>
 </head>
 <body>
+<div class="offline-banner" id="offline-banner" hidden><span><b>이 파일은 컴퓨터에 저장된 사본입니다.</b> 저장·불러오기는 인터넷 사이트에서만 동작합니다. 아래 버튼을 눌러 사이트에서 이용하세요.</span><a class="go" href="https://beboldmoon.github.io/fll-bioglow-scorer/">채점표 사이트로 이동</a></div>
+<script>if(location.protocol==='file:'){document.getElementById('offline-banner').hidden=false;}</script>
 
 
 <div class="wrap">
+  <div class="notice"><b>주의</b> 이 채점표는 2026-27 BIOGLOW 로봇 게임 점수표를 바탕으로 만들었고, 2026년 10월 14일 FIRST 룰 업데이트와 2026년 11월 2일 FLL 코리아 임시 판정 기준까지 반영한 <b>연습용 참고 자료</b>입니다. FIRST LEGO League의 공식 자료가 아니며, 실제 대회 점수는 심판 판정과 공식 룰북·최신 룰 업데이트를 따릅니다. 룰이 바뀌면 여기 점수와 다를 수 있습니다.</div>
   <header>
     <div class="eyebrow">FIRST LEGO League Challenge · 2026-27 BIOGLOW</div>
     <h1>로봇 게임 자가 채점표</h1>
@@ -130,10 +145,17 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
     <div class="hint-reg" style="font-size:12.5px;color:var(--muted)">비밀번호가 없으면 <a href="register.html" style="color:var(--accent);font-weight:700">비밀번호 만들기</a>에서 먼저 등록하세요. 저장·불러오기에 필요합니다.</div>
     <div class="meta-row">
       <label>팀명 <input id="m-team" type="text" placeholder="예: 그린로봇"></label>
-      <label>경기 <input id="m-match" type="text" placeholder="예: 연습 3"></label>
-      <label>날짜 <input id="m-date" type="date"></label>
+      <label>경기 이름 (필수) <input id="m-match" type="text" placeholder="예: 11/8 연습 3"></label>
+      <label>경기 일시 <input id="m-date" type="datetime-local"></label>
     </div>
   </div>
+
+  <section class="cloud" id="cloud">
+    <h2>내 기록</h2>
+    <div class="hint">하단 "저장" 버튼을 누르면 위에 적은 학생마다 각자 비밀번호로 점수가 저장됩니다. 같은 학교·학년반·이름과 비밀번호를 입력하면 어느 기기에서든 기록을 다시 볼 수 있습니다.</div>
+    <div class="row-btn"><button type="button" id="cloud-refresh">내 기록 불러오기</button><span class="hint" id="cloud-status"></span></div>
+    <div class="tblwrap"><table id="cloud-table" hidden><thead><tr><th>경기 일시</th><th>이름</th><th>경기</th><th>점수</th><th></th><th></th></tr></thead><tbody></tbody></table></div>
+  </section>
 
   <div class="rule"><b>장비 제약 조건</b>: 🚫 표시가 있는 임무는 <b>경기 종료 시 장비에 닿아 있는 임무 모형은 점수를 획득할 수 없습니다.</b> 체크하기 전에 로봇이나 부속물이 모형에 닿아 있는지 먼저 확인하세요.</div>
 
@@ -185,6 +207,7 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
     <div class="body">
       <label class="row"><input type="checkbox" id="m03a" data-pts="20"><span class="txt">연구 깃발이 내려감</span><span class="pts">20</span></label>
       <label class="row bonus"><input type="checkbox" id="m03b" data-pts="10" data-needs="m03a"><span class="txt">그리고 바위가 원래의 시작 위치로 되돌아감</span><span class="pts">+10</span></label>
+      <div class="note upd">(2026.11.02 국내 임시 판정) 바위를 물리적으로 뒤집지 않고 연구 깃발만 내려도 20점을 인정하고, 바위가 처음 위치에 그대로 있으면 "원래 시작 위치로 되돌아간 것"으로 보아 보너스 10점도 인정합니다(경기 종료 시 상태 기준). FIRST 공식 업데이트가 나오면 그것이 우선하며 예고 없이 바뀔 수 있습니다.</div>
     </div>
     <div class="tries" data-tries="m03">
       <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m03">+ 시도 추가</button></div>
@@ -251,6 +274,7 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
     <div class="head"><span class="num">임무 08</span><span class="name">덩굴</span><span class="score">0</span></div>
     <div class="body">
       <label class="row"><input type="checkbox" id="m08a" data-pts="30"><span class="txt">덩굴이 매트에 닿아 있음</span><span class="pts">30</span></label>
+      <div class="note upd">(2026.10.14 룰 업데이트) 대회장은 나무 모형 뒤 매트 테두리를 얇은 무광 검정 테이프로 고정하도록 권장됩니다. 현장마다 테이프 유무가 다를 수 있으니 두 경우 모두 연습하세요.</div>
     </div>
     <div class="tries" data-tries="m08">
       <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m08">+ 시도 추가</button></div>
@@ -264,6 +288,7 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
       <label class="row"><input type="checkbox" id="m09a" data-pts="10"><span class="txt">연구 플랫폼이 올려짐</span><span class="pts">10</span></label>
       <label class="row"><input type="checkbox" id="m09b" data-pts="10"><span class="txt">무인 카메라가 배치됨</span><span class="pts">10</span></label>
       <label class="row"><input type="checkbox" id="m09c" data-pts="10"><span class="txt">씨앗이 더 이상 나무에 닿아 있지 않음</span><span class="pts">10</span></label>
+      <div class="note upd">(2026.10.14 룰 업데이트) 나무 모형은 매트 테두리에 검정 테이프로 고정될 수 있습니다. 테이프가 있을 때와 없을 때 모두 연습하세요.</div>
     </div>
     <div class="tries" data-tries="m09">
       <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m09">+ 시도 추가</button></div>
@@ -310,6 +335,7 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
     <div class="head"><span class="num">임무 13</span><span class="name">핵심종</span><span class="score">0</span></div>
     <div class="body">
       <label class="row"><input type="checkbox" id="m13a" data-pts="30"><span class="txt">팀의 핵심종이 복원 플랫폼에 있고 어린 나무들이 세워져 있음</span><span class="pts">30</span></label>
+      <div class="note upd">(2026.10.14 룰 업데이트) 자율 구동 중 모형에 내장된 걸쇠(latch)를 사용해 도크에서 교체형 모형을 분리하는 것은 허용됩니다. 규칙 18(모형 분해·파손 금지) 위반이 아닙니다.</div>
     </div>
     <div class="tries" data-tries="m13">
       <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m13">+ 시도 추가</button></div>
@@ -324,6 +350,7 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
         <span class="ctr"><button type="button" data-dec="m14n">−</button><output id="m14n">0</output><button type="button" data-inc="m14n">+</button></span></div>
       <div class="row sub"><span class="txt"><b style="color:var(--accent)">보너스</b> 그중 매트에 닿아 있는 씨앗 수 (각 +5점)</span>
         <span class="ctr"><button type="button" data-dec="m14b">−</button><output id="m14b">0</output><button type="button" data-inc="m14b">+</button></span></div>
+      <div class="note upd">(2026.10.14 룰 업데이트) 자율 구동 중 모형에 내장된 걸쇠(latch)를 사용해 도크에서 교체형 모형을 분리하는 것은 허용됩니다. 규칙 18(모형 분해·파손 금지) 위반이 아닙니다.</div>
     </div>
     <div class="tries" data-tries="m14">
       <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m14">+ 시도 추가</button></div>
@@ -345,6 +372,7 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
           <option value="m15c">다. 농장 도크 → 퇴비 해치</option>
         </select></div>
       <div class="note">이 임무에서는 오직 하나의 보너스만 가능합니다. 도크 위치는 경기장 설치 가이드의 경기장 배치를 확인하세요.</div>
+      <div class="note upd">(2026.10.14 룰 업데이트) 자율 구동 중 모형에 내장된 걸쇠(latch)를 사용해 도크에서 교체형 모형을 분리하는 것은 허용됩니다. 규칙 18(모형 분해·파손 금지) 위반이 아닙니다.</div>
     </div>
     <div class="tries" data-tries="m15">
       <div class="tl">수행 시간 · 시도별 기록 <button type="button" data-addtry="m15">+ 시도 추가</button></div>
@@ -361,12 +389,6 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
     </div>
   </section>
 
-  <section class="cloud" id="cloud">
-    <h2>내 기록 (클라우드)</h2>
-    <div class="hint">하단 "저장" 버튼을 누르면 위에 적은 학생마다 각자 비밀번호로 점수가 저장됩니다. 같은 학교·학년반·이름과 비밀번호를 입력하면 어느 기기에서든 기록을 다시 볼 수 있습니다.</div>
-    <div class="row-btn"><button type="button" id="cloud-refresh">내 기록 불러오기</button><span class="hint" id="cloud-status"></span></div>
-    <div class="tblwrap"><table id="cloud-table" hidden><thead><tr><th>날짜</th><th>이름</th><th>경기</th><th>점수</th><th></th></tr></thead><tbody></tbody></table></div>
-  </section>
 </div>
 
 <div class="totalbar"><div class="in">
@@ -501,25 +523,36 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
   const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};  // 비밀번호는 저장하지 않음 (snapshot에서 제외)
   let toastT; function toast(msg){ let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),2600); }
   function members(){ return [...document.querySelectorAll('.member')].map(r=>({g:r.querySelector('.m-grade').value.trim(),n:r.querySelector('.m-name').value.trim(),p:r.querySelector('.m-pin').value})).filter(m=>m.g&&m.n); }
-  const ERR={BAD_PIN:'비밀번호가 틀렸거나 등록되지 않은 이름입니다',BAD_TOTAL:'점수 범위 오류'};
+  const ERR={BAD_PIN:'비밀번호가 틀렸거나 등록되지 않은 이름입니다',BAD_TOTAL:'점수 범위 오류',NO_MATCH:'경기 이름을 입력하세요',DUP_MATCH:'같은 경기 이름으로 이미 저장됨'};
+  function toLocalInput(d){ const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
   async function rpc(fn,args){ const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:H,body:JSON.stringify(args)}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
   function total(){ let t=0; document.querySelectorAll('.card[data-id]').forEach(c=>t+=mission(c.dataset.id)); return t; }
-  $('save').addEventListener('click',async()=>{
-    const school=$('m-school').value.trim(), ms=members();
+  async function doSave(overwrite){
+    const school=$('m-school').value.trim(), ms=members(), match=$('m-match').value.trim();
     if(!school||!ms.length){ toast('학교, 학년반, 이름을 먼저 적어주세요'); return; }
+    if(!match){ toast('경기 이름을 입력하세요 (예: 11/8 연습 3)'); $('m-match').focus(); return; }
     if(ms.some(m=>!m.p)){ toast('각자 비밀번호를 입력하세요'); return; }
+    if(!$('m-date').value) $('m-date').value=toLocalInput(new Date());
+    const at=new Date($('m-date').value).toISOString();
     const snap=snapshot(); const gpr=document.querySelector('input[name=gp]:checked'); const t=total();
-    $('save').disabled=true; const ok=[], bad=[];
+    $('save').disabled=true; const ok=[], dup=[], bad=[];
     for(const m of ms){
-      try{ const res=await rpc('fll_save_score',{p_school:school,p_grade:m.g,p_name:m.n,p_pin:m.p,p_team:$('m-team').value.trim()||null,p_match:$('m-match').value.trim()||null,p_date:$('m-date').value||null,p_total:t,p_gp:gpr?+gpr.value:null,p_detail:snap,p_tries:snap.tries||null});
-        if(res==='OK') ok.push(m.n); else bad.push(m.n+': '+(ERR[res]||res)); }
+      try{ const res=await rpc('fll_save_score',{p_school:school,p_grade:m.g,p_name:m.n,p_pin:m.p,p_team:$('m-team').value.trim()||null,p_match:match,p_match_at:at,p_total:t,p_gp:gpr?+gpr.value:null,p_detail:snap,p_tries:snap.tries||null,p_overwrite:!!overwrite});
+        if(res==='OK'||res==='UPDATED') ok.push(m.n+(res==='UPDATED'?'(덮어씀)':'')); else if(res==='DUP_MATCH') dup.push(m.n); else bad.push(m.n+': '+(ERR[res]||res)); }
       catch(e){ bad.push(m.n+': 연결 실패'); console.error(e); }
     }
     $('save').disabled=false;
     if(ok.length) toast(`저장 완료 · ${t}점 (${ok.join(', ')})`);
     if(bad.length) setTimeout(()=>toast('저장 안 됨 → '+bad.join(' / ')),ok.length?2700:0);
+    if(dup.length) showDup(dup, match);
     if(ok.length) loadMine();
-  });
+  }
+  function showDup(names, match){
+    let box=$('dup-box'); if(!box){ box=document.createElement('div'); box.id='dup-box'; box.className='dupbox'; document.body.appendChild(box); }
+    box.innerHTML=`<div><b>"${match}"</b> 경기는 ${names.join(', ')} 기록이 이미 있습니다.<br>새 경기라면 경기 이름을 바꿔서 저장하세요. 방금 기록으로 바꾸려면 덮어쓰기를 누르세요.</div><div class="btns"><button type="button" id="dup-ow">덮어쓰기</button><button type="button" id="dup-no">취소</button></div>`;
+    $('dup-ow').onclick=()=>{ box.remove(); doSave(true); }; $('dup-no').onclick=()=>{ box.remove(); $('m-match').focus(); };
+  }
+  $('save').addEventListener('click',()=>doSave(false));
   async function loadMine(){
     const school=$('m-school').value.trim(), ms=members(); const st=$('cloud-status'), tb=$('cloud-table');
     if(!school||!ms.length){ st.textContent='학교, 학년반, 이름을 적은 뒤 눌러주세요'; return; }
@@ -527,10 +560,11 @@ select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);
     st.textContent='불러오는 중…';
     try{
       const rows=await rpc('fll_my_scores',{p_school:school,p_grade:m.g,p_name:m.n,p_pin:m.p});
+      try{ sessionStorage.setItem('bioglow-me',JSON.stringify({school,grade:m.g,name:m.n,pin:m.p})); }catch(e){}
       const body=tb.querySelector('tbody'); body.innerHTML='';
-      rows.forEach(x=>{ const tr=document.createElement('tr'); const d=new Date(x.created_at); const ds=`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-        tr.innerHTML=`<td>${ds}</td><td>${x.student_name}</td><td>${x.match_label||''}</td><td class="t">${x.total}</td><td><button type="button" class="ld">불러오기</button></td>`;
-        tr.querySelector('.ld').addEventListener('click',()=>{ restore(x.detail); render(); toast('기록을 불러왔습니다'); window.scrollTo({top:0,behavior:'smooth'}); }); body.appendChild(tr); });
+      rows.forEach(x=>{ const tr=document.createElement('tr'); const d=new Date(x.match_at||x.created_at); const ds=`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        tr.innerHTML=`<td>${ds}</td><td>${x.student_name}</td><td><a class="rec" href="record.html?id=${x.id}">${x.match_label||'(이름 없음)'}</a></td><td class="t">${x.total}</td><td><a class="ld" href="record.html?id=${x.id}">상세</a></td><td><button type="button" class="ld">불러오기</button></td>`;
+        tr.querySelector('button.ld').addEventListener('click',()=>{ restore(x.detail); render(); toast('기록을 불러왔습니다'); window.scrollTo({top:0,behavior:'smooth'}); }); body.appendChild(tr); });
       tb.hidden=!rows.length; st.textContent=rows.length?`${m.g} ${m.n} · 최근 ${rows.length}건`:'기록이 없거나 비밀번호가 틀렸습니다';
     }catch(e){ st.textContent='불러오기 실패: 인터넷 연결을 확인하세요'; console.error(e); }
   }
